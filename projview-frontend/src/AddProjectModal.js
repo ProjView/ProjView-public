@@ -1,34 +1,50 @@
 import React, { useState } from 'react';
-import './AddProjectModal.css'; // Optional CSS for styling
+import './AddProjectModal.css';
 
 const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
   const [name, setName] = useState('');
-  const [type, setType] = useState('Active'); // Default type
+  const [type, setType] = useState('Active');
   const [lead, setLead] = useState('');
-  const [url, setUrl] = useState(''); // URL is optional
-  const [error, setError] = useState(''); // State for error message
+  const [url, setUrl] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !lead) {
       setError('Please fill out all required fields.');
       return;
     }
-    setError(''); // Clear error message if validation passes
-    
-    // Call the function to add the project
-    onAddProject({ 
-      name, 
-      type, 
-      lead, 
-      url: url || null // Set URL to null if empty
-    });
+    setError('');
 
-    // Close the modal
-    onClose(); 
+    const project = {
+      name,
+      type,
+      lead,
+      url: url || null,
+    };
+
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(project)
+      });
+
+      if (response.ok) {
+        const createdProject = await response.json();
+        onAddProject(createdProject);
+      } else {
+        throw new Error('Failed to create project');
+      }
+      onClose();
+    } catch (error) {
+      setError('Error: ' + error.message);
+    }
   };
 
-  if (!isOpen) return null; // Don't render anything if the modal is not open
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay">
@@ -36,6 +52,7 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
         <h2>Add a New Project</h2>
         {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleSubmit}>
+          {/* Form fields here */}
           <div className="form-group">
             <label htmlFor="project-name">Project Name*</label>
             <input

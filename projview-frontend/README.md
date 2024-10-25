@@ -7,9 +7,7 @@ npx create-react-app "Name of App"
 
 then copy src folder into the app src folder and run:
 
-```bash
-npm install firebase @fortawesome/react-fontawesome react-router-dom @fortawesome/free-solid-svg-icons
-```
+#### Dependencies are in package.json, have to merge with the created one to have all the necessary dependencies
 
 lastly run, to run locally
 
@@ -17,13 +15,4 @@ lastly run, to run locally
 npm start
 ```
 
-or to initalize to firebase use:
 
-```bash
-firebase init
-```
-
-then optionally obtain the API Key from firebase in /src/firebase.js and to deploy to firebase run
-```bash
-firebase deploy
-```

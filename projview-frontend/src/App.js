@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
-import { collection, addDoc, getDocs, deleteDoc, doc,updateDoc } from "firebase/firestore";
-import { db } from "./firebase";
 import './Project.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBriefcase, faCode, faTrash, faFileCirclePlus, faCheck, faXmark, faPen, faQuestionCircle, faPause, faCheckDouble} from '@fortawesome/free-solid-svg-icons';
+import { faBriefcase, faCode, faTrash, faFileCirclePlus, faCheck, faXmark, faPen, faQuestionCircle, faPause, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ProjectDetails from "./ProjectDetails";
 import Header from './Header'; 
 import AddProjectModal from "./AddProjectModal"; 
@@ -14,50 +12,74 @@ function App() {
   const [searchTerm, setSearchTerm] = useState(""); // State for search term
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const navigate = useNavigate(); // Hook to programmatically navigate
-
+  
   // State for selected category and status
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [projectDetailsModalOpen, setProjectDetailsModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
-
-  // Fetching projects from Firestore
+  
+  // Fetching projects from the backend API
   useEffect(() => {
     const fetchProjects = async () => {
-      const projectCollection = collection(db, "projects");
-      const projectSnapshot = await getDocs(projectCollection);
-      const projectList = projectSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setProjects(projectList);
+      try {
+        const response = await fetch('http://localhost:8080/api/projects', {
+          method: 'GET',
+          headers: { 'accept': '*/*' }
+        });
+        
+        if (response.ok) {
+          const projectList = await response.json();
+          setProjects(projectList);
+        } else {
+          throw new Error('Failed to fetch projects');
+        }
+      } catch (error) {
+        console.error(error.message);
+      }
     };
     fetchProjects();
   }, []);
-
+  
   // Function to refresh the project list
   const refreshProjects = async () => {
-  // Set a delay of 500 milliseconds (0.5 seconds), // TODO: There is an issue with refreshing projects after changing the project details, current workaround is to wait half a second needs better system
-  setTimeout(async () => {
-    const projectCollection = collection(db, "projects");
-    const projectSnapshot = await getDocs(projectCollection);
-    const projectList = projectSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    setProjects(projectList);
-  }, 500); // 500 milliseconds delay
+    try {
+      const response = await fetch('http://localhost:8080/api/projects', {
+        method: 'GET',
+        headers: { 'accept': '*/*' }
+      });
+      
+      if (response.ok) {
+        const projectList = await response.json();
+        setProjects(projectList);
+      } else {
+        throw new Error('Failed to fetch projects');
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
   };
 
-// Function to open the project details modal
-const openProjectDetailsModal = (id) => {
-  setCurrentProjectId(id);
-  setProjectDetailsModalOpen(true);
-};
+  // Function to open the project details modal
+  const openProjectDetailsModal = (id) => {
+    setCurrentProjectId(id);
+    setProjectDetailsModalOpen(true);
+  };
 
   // Deleting a project by ID
   const deleteProject = async (id) => {
-    await deleteDoc(doc(db, "projects", id));
-    setProjects(projects.filter(project => project.id !== id)); // Update projects state
+    try {
+        const response = await fetch(`http://localhost:8080/api/projects/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          setProjects(projects.filter(project => project.id !== id)); // Update projects state
+        } else {
+          throw new Error('Failed to delete project');
+        }
+      } catch (error) {
+        console.error(error.message);
+      }
   };
 
   // Function to open the modal
@@ -72,29 +94,31 @@ const openProjectDetailsModal = (id) => {
     setProjectDetailsModalOpen(false); 
   };
 
-// Adding a project
-const addProject = async (projectData) => {
-  const createdAt = new Date();
-  const docRef = await addDoc(collection(db, "projects"), {
-      title: projectData.name, // Ensure this is set
-      type: projectData.type,
-      lead: projectData.lead,
-      url: projectData.url || null,
-      createdAt: createdAt,
-      status: projectData.status || "active"
-  });
+  // Adding a project
+  const addProject = async (projectData) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/projects', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(projectData)
+      });
 
-  // Immediately update the local state with the new project
-  setProjects(prevProjects => [
-      ...prevProjects,
-      { id: docRef.id, ...projectData, createdAt, status: projectData.status || "active" }
-  ]);
-};
+      if (response.ok) {
+        await refreshProjects();
+      } else {
+        throw new Error('Failed to add project');
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
 
   // Filtered projects based on search term, selected category, and selected status
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.title && project.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === "all" || project.status.toLowerCase() === selectedStatus.toLowerCase();
+    const matchesSearch = project.name && project.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatus === "all" || project.type.toLowerCase() === selectedStatus.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
@@ -110,27 +134,9 @@ const addProject = async (projectData) => {
     return headerText;
   };
 
-  const changeProjectStatus = async (projectId, newStatus) => {
-    const projectRef = doc(db, "projects", projectId);
-    await updateDoc(projectRef, { status: newStatus }); // Update the project's status in Firestore
-    // Update the local state
-    setProjects(projects.map(project => 
-      project.id === projectId ? { ...project, status: newStatus } : project
-    ));
-  };
-  
-  // Pass this function to the ProjectDetails component
-  {projectDetailsModalOpen && (
-      <ProjectDetails 
-        projectId={currentProjectId} 
-        onClose={closeModal} 
-      />
-  )}
-  
   return (
     <div className="App" style={{ textAlign: "left" }}>
       <Header /> {/* Assuming you have a Header component */}
-
       <div className="aui-page-header">
         <div className="aui-page-header-inner">
           <h1>Browse projects</h1>
@@ -216,26 +222,27 @@ const addProject = async (projectData) => {
             <tbody>
               {filteredProjects.map((project) => (
                 <tr key={project.id}>
-                <td>
+                  <td>
                     <a 
-                        href="#" 
-                        onClick={(e) => {
-                            e.preventDefault(); // Prevent default anchor behavior
-                            openProjectDetailsModal(project.id); // Open the project details modal
-                        }} 
-                        style={{ textDecoration: 'underline', cursor: 'pointer' }}
+                      href="#" 
+                      onClick={(e) => {
+                          e.preventDefault(); // Prevent default anchor behavior
+                          openProjectDetailsModal(project.id); // Open the project details modal
+                      }} 
+                      style={{ textDecoration: 'underline', cursor: 'pointer' }}
                     >
-                        {project.title}
+                      {project.name}
                     </a>
-                </td>
+                  </td>
                   <td>           
-                    {project.status.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
-                    {project.status.toLowerCase() === "new" && <FontAwesomeIcon icon={faPen} />}
-                    {project.status.toLowerCase() === "hold" && <FontAwesomeIcon icon={faPause} />}
-                    {project.status.toLowerCase() === "end" && <FontAwesomeIcon icon={faXmark} />}</td>
+                    {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
+                    {project.type.toLowerCase() === "new" && <FontAwesomeIcon icon={faPen} />}
+                    {project.type.toLowerCase() === "hold" && <FontAwesomeIcon icon={faPause} />}
+                    {project.type.toLowerCase() === "end" && <FontAwesomeIcon icon={faXmark} />}
+                  </td>
                   <td>{project.lead}</td>
                   <td>{project.url || 'No URL'}</td>
-                  <td>
+                  <td style={{ width: "10px" }}>
                     <FontAwesomeIcon icon={faTrash} onClick={() => deleteProject(project.id)} style={{ cursor: 'pointer', color: 'red' }} />
                   </td>
                 </tr>
@@ -259,11 +266,11 @@ const addProject = async (projectData) => {
       </div>
 
       {projectDetailsModalOpen && (
-                <ProjectDetails 
-                    projectId={currentProjectId} 
-                    onClose={closeModal}
-                />
-            )}
+        <ProjectDetails 
+          projectId={currentProjectId} 
+          onClose={closeModal} 
+        />
+      )}
     </div>
   );
 }
