@@ -1,0 +1,29 @@
+# ProjView front end
+## To run
+run command 
+```bash
+npx create-react-app "Name of App"
+```
+
+then copy src folder into the app src folder and run:
+
+```bash
+npm install firebase @fortawesome/react-fontawesome react-router-dom @fortawesome/free-solid-svg-icons
+```
+
+lastly run, to run locally
+
+```bash
+npm start
+```
+
+or to initalize to firebase use:
+
+```bash
+firebase init
+```
+
+then optionally obtain the API Key from firebase in /src/firebase.js and to deploy to firebase run
+```bash
+firebase deploy
+```
