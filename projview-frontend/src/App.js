@@ -6,11 +6,18 @@ import { faBriefcase, faCode, faTrash, faFileCirclePlus, faCheck, faXmark, faPen
 import ProjectDetails from "./ProjectDetails";
 import Header from './Header'; 
 import AddProjectModal from "./AddProjectModal"; 
+import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
+import authConfig from "./authConfig"; // Import your auth config
+
+const msalInstance = new PublicClientApplication(authConfig); // Create a new MSAL instance
 
 function App() {
   const [projects, setProjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState(""); // State for search term
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const [accessToken, setAccessToken] = useState(null); // State for access token
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track login status
+  const [userName, setUserName] = useState(""); // State to hold user's name
   const navigate = useNavigate(); // Hook to programmatically navigate
   
   // State for selected category and status
@@ -18,6 +25,31 @@ function App() {
   const [projectDetailsModalOpen, setProjectDetailsModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
   
+  // Initialize MSAL on component mount
+  useEffect(() => {
+    const initializeMSAL = async () => {
+      try {
+        await msalInstance.initialize(); // Initialize MSAL
+        console.log("MSAL Initialized");
+
+        // Check for existing login state
+        const storedAccessToken = localStorage.getItem('accessToken');
+        const storedUserName = localStorage.getItem('userName');
+        
+        if (storedAccessToken) {
+          setAccessToken(storedAccessToken);
+          setUserName(storedUserName);
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.error("MSAL Initialization error:", error);
+      }
+    };
+
+    initializeMSAL(); // Call the initialize function
+  }, []);
+
+
   // Fetching projects from the backend API
   useEffect(() => {
     const fetchProjects = async () => {
@@ -39,6 +71,54 @@ function App() {
     };
     fetchProjects();
   }, []);
+
+  // Function to authenticate user
+  const authenticateOneDrive = async () => {
+    try {
+      const response = await msalInstance.loginPopup({
+        scopes: ["Files.ReadWrite", "User.Read"], // Define the scopes you need
+      });
+      const tokenResponse = await msalInstance.acquireTokenSilent({
+        scopes: ["Files.ReadWrite", "User.Read"],
+        account: response.account,
+      });
+      setAccessToken(tokenResponse.accessToken);
+      setIsLoggedIn(true);
+
+      // Store the access token and user name in localStorage
+      localStorage.setItem('accessToken', tokenResponse.accessToken);
+      localStorage.setItem('userName', response.account.name);
+
+      // Fetch user profile information
+      const userProfileResponse = await fetch("https://graph.microsoft.com/v1.0/me", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${tokenResponse.accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (userProfileResponse.ok) {
+        const userProfileData = await userProfileResponse.json();
+        setUserName(userProfileData.displayName);
+      } else {
+        console.error("Failed to fetch user profile");
+      }
+    } catch (error) {
+      console.error("Authentication error:", error);
+    }
+  };
+
+    // Function to log out the user
+    const logout = () => {
+      setAccessToken(null);
+      setIsLoggedIn(false);
+      setUserName("");
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('userName');
+      // Optionally, you can also sign out from MSAL. Currently creates issues when logging out, it would be maybe wise to confront the documentation on MSAL.
+      // msalInstance.logout(); 
+    };
   
   // Function to refresh the project list
   const refreshProjects = async () => {
@@ -89,9 +169,9 @@ function App() {
 
   // Function to close the modal
   const closeModal = async () => {
-    await refreshProjects(); // Refresh the project list
     setIsModalOpen(false);
     setProjectDetailsModalOpen(false); 
+    await refreshProjects();
   };
 
   // Adding a project
@@ -136,7 +216,7 @@ function App() {
 
   return (
     <div className="App" style={{ textAlign: "left" }}>
-      <Header /> {/* Assuming you have a Header component */}
+      <Header onLogin={authenticateOneDrive} onLogout={logout} userName={isLoggedIn ? userName : null} />
       <div className="aui-page-header">
         <div className="aui-page-header-inner">
           <h1>Browse projects</h1>
@@ -197,8 +277,9 @@ function App() {
           </div>
         </aside>
 
-        {/* Main Content */}
-        <main>
+        {/* Main Content  
+        The positioning style on main content will need revisit if want to work on mobile, this in only temporary */}
+        <main style={{ maxHeight: "calc(100vh - 135px)", overflowY: "hidden" }}>
           <div className="project-list-header">
             <h2>{getHeaderText()}</h2> {/* Updated header text based on selections */}
             <input
@@ -209,7 +290,7 @@ function App() {
               placeholder="Search projects..."
             />
           </div>
-          <div style={{ maxHeight: "70%", overflowY: "auto" }}>
+          <div style={{ maxHeight: "80%", overflowY: "auto" }}>
           <table>
             <thead>
               <tr>
@@ -269,6 +350,7 @@ function App() {
         <ProjectDetails 
           projectId={currentProjectId} 
           onClose={closeModal} 
+          accessToken={accessToken}
         />
       )}
     </div>

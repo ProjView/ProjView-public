@@ -68,40 +68,6 @@ textarea {
     border: 1px solid #ccc;
 }
 
-.todo-item {
-    display: flex;
-    align-items: center;
-    margin: 10px 0;
-}
-
-.remove-todo {
-    background-color: #ff5a5a;
-    border: none;
-    color: white;
-    padding: 5px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.add-todo input {
-    width: 80%;
-    padding: 5px;
-}
-
-.complete-task-btn {
-    background-color: #28a745;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-    align-self: flex-start;
-}
-
-.complete-task-btn:hover {
-    background-color: #218838;
-}
 .project-name-section{
     width: 50%;
     /* display: flex; */

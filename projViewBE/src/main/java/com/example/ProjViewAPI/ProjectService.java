@@ -26,6 +26,13 @@ public class ProjectService {
         projectRepository.deleteById(id);
     }
 
+    public List<Project> addProjects(List<Project> projects) {
+        for (Project project : projects) {
+            addProject(project); // Assuming addProject handles the individual project addition
+        }
+        return projects; // Return the list of added projects
+    }
+
     public Project getProjectById(Long id) {
         return projectRepository.findById(id).orElseThrow(() -> new RuntimeException("Project not found"));
     }
@@ -37,6 +44,7 @@ public class ProjectService {
         existingProject.setLead(updatedProject.getLead());
         existingProject.setUrl(updatedProject.getUrl());
         existingProject.setDescription(updatedProject.getDescription());
+        existingProject.setOneDriveFolder(updatedProject.getOneDriveFolder());
         // Update other fields as necessary
         return projectRepository.save(existingProject);
     }

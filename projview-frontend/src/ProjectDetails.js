@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from "react";
 import FileTree from "./FileTree"; // Import the FileTree component
-import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
-import authConfig from "./authConfig"; // Import your auth config
 import './ProjectDetails.css'; // Import the CSS for styling
 
-const msalInstance = new PublicClientApplication(authConfig); // Create a new MSAL instance
 
-const ProjectDetails = ({ projectId, onClose, refreshProjects }) => {
+const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     const [project, setProject] = useState(null); // State to hold project details
     const [username, setUsername] = useState(""); // State for username
     const [comment, setComment] = useState(""); // State for comment
@@ -14,18 +11,9 @@ const ProjectDetails = ({ projectId, onClose, refreshProjects }) => {
     const [projectLead, setProjectLead] = useState(""); // State for project lead
     const [projectName, setProjectName] = useState(""); // State for project name
     const [description, setDescription] = useState(""); // State for project description
-    const [accessToken, setAccessToken] = useState(null); // State for OneDrive access token
-
-
-    // Initialize MSAL on component mount
-    useEffect(() => {
-        msalInstance.initialize().then(() => {
-            console.log("MSAL Initialized");
-            authenticateOneDrive(); // Call the authentication function after initialization
-        }).catch(error => {
-            console.error("MSAL Initialization error:", error);
-        });
-    }, []);
+    const [folderData, setFolderData] = useState(null); // State to hold folder data
+    const [oneDriveFolder, setOneDrivefolder] = useState(""); // State to hold oneDriveFolder name
+    
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -36,33 +24,42 @@ const ProjectDetails = ({ projectId, onClose, refreshProjects }) => {
                 setProjectName(projectData.name || ""); // Set initial project name
                 setProjectLead(projectData.lead || ""); // Set initial project lead
                 setDescription(projectData.description || "");
-                setSelectedStatus(projectData.type || "New"); // Assuming "type" is your status field
+                setSelectedStatus(projectData.type || "New"); 
+                setOneDrivefolder(projectData.oneDriveFolder || ""); // Set initial oneDriveFolder
+
+                // Check if projectName is defined before fetching OneDrive data
+                if (projectData.oneDriveFolder) {
+                    fetchOneDriveData(projectData.oneDriveFolder);  
+                }
             } catch (error) {
-                console.error("Error fetching project details:", error);
+            console.error("Error fetching project details:", error);
             }
         };
 
         fetchProjectDetails();
     }, [projectId]);
 
-    const authenticateOneDrive = async () => {
+    const fetchOneDriveData = async (oneDriveFolder) => {
+        if (!accessToken) return; // Ensure access token is available
+
         try {
-            const response = await msalInstance.loginPopup({
-                scopes: ["Files.ReadWrite", "User.Read"], // Define the scopes you need
+            const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${oneDriveFolder}:/children`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
             });
-            const tokenResponse = await msalInstance.acquireTokenSilent({
-                scopes: ["Files.ReadWrite", "User.Read"],
-                account: response.account,
-            });
-            setAccessToken(tokenResponse.accessToken); // Set the access token
+            if (response.ok) {
+                const data = await response.json();
+                setFolderData(data.value); // Set folder data
+            } else {
+                throw new Error("Failed to fetch OneDrive data");
+            }
         } catch (error) {
-            console.error("Authentication error:", error);
+            console.error("Error fetching OneDrive data:", error);
         }
     };
-
-    useEffect(() => {
-        authenticateOneDrive(); // Call the authentication function on mount
-    }, []);
 
     const updateProject = async (updatedData) => {
         try {
@@ -83,6 +80,7 @@ const ProjectDetails = ({ projectId, onClose, refreshProjects }) => {
         } catch (error) {
             console.error("Error updating project:", error);
         }
+        setOneDrivefolder(updatedData.oneDriveFolder);
     };
 
     const handleCommentSubmit = async (e) => {
@@ -100,18 +98,103 @@ const ProjectDetails = ({ projectId, onClose, refreshProjects }) => {
         }
     };
 
-    const closeModal = () => {
+    const closeModal = async() => {
         const updatedData = {
             name: projectName,
             lead: projectLead,
             type: selectedStatus,
             description: description,
+            oneDriveFolder: oneDriveFolder,
         };
         updateProject(updatedData);
-        onClose();
-        document.body.classList.remove("modal-open");
+        setTimeout(() => {
+            onClose(); // Call onClose to refresh the project list and close the modal
+            document.body.classList.remove("modal-open");
+        }, 250); 
     };
 
+    const checkFolderExists = async (oneDriveFolder) => {
+        if (!accessToken) return false; // Ensure access token is available
+
+        try {
+            const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${oneDriveFolder}`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            return response.ok; // If the response is ok, the folder exists
+        } catch (error) {
+            console.error("Error checking folder existence:", error);
+            return false; // Assume folder does not exist on error
+        }
+    };
+
+    const createFolder = async (newFolderName) => {
+        if (!accessToken) return; // Ensure access token is available
+
+        try {
+            const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${newFolderName}:/`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ name: newFolderName, folder: {} }),
+            });
+            if (response.ok) {
+                // Refresh the folder data after creating the folder
+                fetchOneDriveData([newFolderName]);
+                await updateProject({ ...project, oneDriveFolder: newFolderName }); // Update the project with the new folder name
+            } else {
+                console.error("Failed to create the folder");
+            }
+        } catch (error) {
+            console.error("Error creating the folder:", error);
+        }
+    };
+
+    const updateFolder = async () => {
+        const newFolderName = prompt("Enter the new OneDrive folder name:");
+        if (newFolderName) {
+            try {
+                // Check if the folder already exists
+                const exists = await checkFolderExists(newFolderName);
+                setOneDrivefolder([newFolderName]); // Need to refresh fileTree after this
+                if (exists) {
+                    // If it exists, fetch the folder data and update the project
+                    await fetchOneDriveData(newFolderName);
+                    await updateProject({ ...project, oneDriveFolder: newFolderName });
+                } else {
+                    // If it doesn't exist, create the folder
+                    await createFolder(newFolderName);
+                }
+            } catch (error) {
+                console.error("Error updating OneDrive folder:", error);
+            }
+        }
+    };
+
+    const changeFolder = async (newFolderName) => {
+        if (newFolderName) {
+            try {
+                // Check if the folder already exists
+                const exists = await checkFolderExists(newFolderName);
+                if (exists) {
+                    // If it exists, fetch the folder data and update the project
+                    await fetchOneDriveData(newFolderName);
+                    await updateProject({ ...project, oneDriveFolder: newFolderName });
+                } else {
+                    // If it doesn't exist, create the folder
+                    await createFolder(newFolderName);
+                }
+            } catch (error) {
+                console.error("Error updating OneDrive folder:", error);
+            }
+        }
+    };
     if (!project) {
         return <div>Loading...</div>;
     }
@@ -192,10 +275,13 @@ const ProjectDetails = ({ projectId, onClose, refreshProjects }) => {
                             </form>
                         </div>
                         <h2>Project Files</h2>
-                        {accessToken ? (
-                            <FileTree accessToken={accessToken} /> // Render the FileTree component
+                        {folderData ? (
+                            <FileTree data={folderData} accessToken={accessToken} oneDriveFolder={oneDriveFolder} changeFolder={changeFolder} updateFolder={updateFolder}/> // Pass folder data and accessToken to FileTree
                         ) : (
-                            <p>Loading files...</p>
+                            <div>
+                                <p>No OneDrive folder specified.</p>
+                                <button onClick={updateFolder}>Set OneDrive Folder</button> {/* Button to set OneDrive folder */}
+                            </div>
                         )}
                     </div>
                 </div>

@@ -4,36 +4,46 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFolderOpen } from '@fortawesome/free-solid-svg-icons';
 import './Header.css';
 
-const Header = () => {
+const Header = ({ onLogin, onLogout, userName }) => { // Accept onLogout as a prop
     return (
-        <header id="header" role="banner" style={{ background: '#282c34', padding: '10px', color: 'white' }}>
+        <header id="header" role="banner">
             <div className="aui-header-inner">
-                <div className="aui-header-before">
+                {/* <div className="aui-header-before">
                     <span id="logo" className="aui-header-logo">
                         <a href="/" aria-label="Go to home page">
                             <img src="/path/to/logo.png" alt="Logo" style={{ height: '40px' }} />
                         </a>
                     </span>
-                </div>
-                <nav className="aui-header" aria-label="Site" style={{ display: 'flex', alignItems: 'center' }}>
-                    <h2 style={{ margin: '0 20px' }}>
+                </div> */}
+                <nav className="aui-header" aria-label="Site">
+                    <h2>
                         PROJECTS <FontAwesomeIcon icon={faFolderOpen} style={{ color: 'white' }} />
                     </h2>
-                    <ul className="aui-nav" style={{ listStyle: 'none', display: 'flex', margin: '0', padding: '0' }}>
-                        <li style={{ margin: '0 10px' }}>
-                            <a href="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>Dashboards</a>
+                    <ul className="aui-nav">
+                        <li>
+                            <a href="/dashboard">Dashboards</a>
                         </li>
-                        <li style={{ margin: '0 10px' }}>
-                            <a href="/projects" style={{ color: 'white', textDecoration: 'none' }}>Projects</a>
+                        <li>
+                            <a href="/projects">Projects</a>
                         </li>
-                        <li style={{ margin: '0 10px' }}>
-                            <a href="/issues" style={{ color: 'white', textDecoration: 'none' }}>Issues</a>
+                        <li>
+                            <a href="/issues">Issues</a>
                         </li>
-                        <li style={{ margin: '0 10px' }}>
-                            <a href="/help" style={{ color: 'white', textDecoration: 'none' }}>Help</a>
+                        <li>
+                            <a href="/help">Help</a>
                         </li>
                     </ul>
                 </nav>
+                <div className="user-actions">
+                    {userName ? (
+                        <div className="logged-in">
+                            <span>Welcome, {userName}</span>
+                            <button onClick={onLogout} className="logout-button">Logout</button>
+                        </div>
+                    ) : (
+                        <button onClick={onLogin} className="login-button">Login to OneDrive</button>
+                    )}
+                </div>
             </div>
         </header>
     );

@@ -15,6 +15,7 @@ public class Project {
     private String type;
     private String lead;
     private String url;
+    private String OneDriveFolder;
 
     @Column(length = 1000) // assuming description can be long
     private String description;
@@ -69,4 +70,13 @@ public class Project {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getOneDriveFolder(){
+        return OneDriveFolder;
+    }
+
+    public void setOneDriveFolder(String oneDriveFolder){
+        this.OneDriveFolder = oneDriveFolder;
+    }
+
 }

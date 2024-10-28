@@ -28,6 +28,12 @@ public class ProjectController {
         return projectService.addProject(project);
     }
 
+    @PostMapping("/bulk") // New endpoint for bulk creation
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<Project> createProjects(@RequestBody List<Project> projects) {
+        return projectService.addProjects(projects); // Call the service method for bulk addition
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteProject(@PathVariable Long id) {

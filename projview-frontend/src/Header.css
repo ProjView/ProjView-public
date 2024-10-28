@@ -1,13 +1,19 @@
-
 /* src/Header.css */
 #header {
     background-color: #282c34; /* Dark background */
     padding: 10px; /* Padding around header */
+    position: relative; /* Position relative for absolute positioning */
 }
 
 .aui-header-inner {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Space between logo/navigation and user actions */
+    align-items: center;
+    width: 100%; /* Full width */
+}
+
+.aui-header {
+    display: flex;
     align-items: center;
 }
 
@@ -30,3 +36,26 @@
     text-decoration: underline; /* Underline on hover */
 }
 
+.user-actions {
+    display: flex;
+    align-items: center;
+    margin-left: auto; /* Push user actions to the right */
+}
+
+.logged-in {
+    display: flex;
+    align-items: center;
+}
+
+.login-button, .logout-button {
+    margin-left: 20px; /* Space between welcome message and button */
+    background-color: #4CAF50; /* Green background for login button */
+    color: white; /* White text color */
+    border: none; /* No border */
+    padding: 10px 15px; /* Padding */
+    cursor: pointer; /* Pointer cursor */
+}
+
+.logout-button {
+    background-color: #f44336; /* Red background for logout button */
+}
