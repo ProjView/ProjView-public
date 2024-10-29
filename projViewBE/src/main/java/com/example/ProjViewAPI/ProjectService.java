@@ -1,5 +1,7 @@
 package com.example.ProjViewAPI;
 
+import com.example.ProjViewAPI.entity.Project;
+import com.example.ProjViewAPI.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
