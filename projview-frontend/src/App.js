@@ -7,7 +7,7 @@ import ProjectDetails from "./ProjectDetails";
 import Header from './Header'; 
 import AddProjectModal from "./AddProjectModal"; 
 import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
-import authConfig from "./authConfig"; // Import your auth config
+import { authConfig, BASE_URL } from "./authConfig"; // Import the named exports
 
 const msalInstance = new PublicClientApplication(authConfig); // Create a new MSAL instance
 
@@ -54,7 +54,7 @@ function App() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/projects', {
+        const response = await fetch(`${BASE_URL}/api/projects`, {
           method: 'GET',
           headers: { 'accept': '*/*' }
         });
@@ -123,7 +123,7 @@ function App() {
   // Function to refresh the project list
   const refreshProjects = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/projects', {
+      const response = await fetch(`${BASE_URL}/api/projects`, {
         method: 'GET',
         headers: { 'accept': '*/*' }
       });
@@ -148,7 +148,7 @@ function App() {
   // Deleting a project by ID
   const deleteProject = async (id) => {
     try {
-        const response = await fetch(`http://localhost:8080/api/projects/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/projects/${id}`, {
           method: 'DELETE',
         });
 
@@ -177,7 +177,7 @@ function App() {
   // Adding a project
   const addProject = async (projectData) => {
     try {
-      const response = await fetch('http://localhost:8080/api/projects', {
+      const response = await fetch(`${BASE_URL}/api/projects`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json'

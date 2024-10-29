@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import FileTree from "./FileTree"; // Import the FileTree component
 import './ProjectDetails.css'; // Import the CSS for styling
-
+import { BASE_URL } from "./authConfig"
 
 const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     const [project, setProject] = useState(null); // State to hold project details
@@ -18,7 +18,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     useEffect(() => {
         const fetchProjectDetails = async () => {
             try {
-                const response = await fetch(`http://localhost:8080/api/projects/${projectId}`);
+                const response = await fetch(`${BASE_URL}/api/projects/${projectId}`);
                 const projectData = await response.json();
                 setProject(projectData);
                 setProjectName(projectData.name || ""); // Set initial project name
@@ -63,7 +63,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
 
     const updateProject = async (updatedData) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/projects/${projectId}`, {
+            const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
