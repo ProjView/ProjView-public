@@ -1,20 +1,17 @@
-package com.example.ProjViewAPI;
+package com.example.ProjViewAPI.service;
 
 import com.example.ProjViewAPI.entity.Project;
 import com.example.ProjViewAPI.repository.ProjectRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
-
-    @Autowired
-    public ProjectService(ProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
-    }
 
     public List<Project> getAllProjects() {
         return projectRepository.findAll();

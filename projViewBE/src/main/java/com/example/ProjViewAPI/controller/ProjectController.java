@@ -1,9 +1,9 @@
 package com.example.ProjViewAPI.controller;
 
-import com.example.ProjViewAPI.ProjectService;
 import com.example.ProjViewAPI.entity.Project;
+import com.example.ProjViewAPI.service.ProjectService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,15 +11,11 @@ import java.util.List;
 
 @RestController
 @SecurityRequirement(name = "bearerAuthorization")
+@RequiredArgsConstructor
 @RequestMapping("/api/projects")
 public class ProjectController {
 
     private final ProjectService projectService;
-
-    @Autowired
-    public ProjectController(ProjectService projectService) {
-        this.projectService = projectService;
-    }
 
     @GetMapping
     public List<Project> getAllProjects() {
