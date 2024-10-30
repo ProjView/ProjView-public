@@ -20,8 +20,8 @@ function App() {
   const [userName, setUserName] = useState(""); // State to hold user's name
   const navigate = useNavigate(); // Hook to programmatically navigate
   
-  // State for selected category and status
-  const [selectedStatus, setSelectedStatus] = useState("all");
+  // State for selected statuses
+  const [selectedStatuses, setSelectedStatuses] = useState(["new", "active"]);
   const [projectDetailsModalOpen, setProjectDetailsModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
   
@@ -187,6 +187,11 @@ function App() {
 
       if (response.ok) {
         await refreshProjects();
+
+        // If the new project's status is "END" and it's not in the selectedStatuses, add it
+        if (projectData.type.toLowerCase() === "end" && !selectedStatuses.includes("end")) {
+          setSelectedStatuses([...selectedStatuses, "end"]);
+        }
       } else {
         throw new Error('Failed to add project');
       }
@@ -195,20 +200,39 @@ function App() {
     }
   };
 
+  // Function to handle adding a project from the modal
+  const handleAddProject = async (projectData) => {
+    await addProject(projectData);
+    closeModal();
+  };
+
   // Filtered projects based on search term, selected category, and selected status
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name && project.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === "all" || project.type.toLowerCase() === selectedStatus.toLowerCase();
+    const matchesStatus = selectedStatuses.includes(project.type.toLowerCase());
 
     return matchesSearch && matchesStatus;
   });
+
+  // Function to toggle status selection
+  const toggleStatus = (status) => {
+    setSelectedStatuses(prevStatuses => {
+      let updatedStatuses;
+      if (prevStatuses.includes(status)) {
+        updatedStatuses = prevStatuses.filter(s => s !== status);
+      } else {
+        updatedStatuses = [...prevStatuses, status];
+      }
+      return updatedStatuses;
+    });
+  };
 
   // Function to generate the header text based on selected category and status
   const getHeaderText = () => {
     let headerText = "All projects";
 
-    if (selectedStatus !== "all") {
-      headerText += ` - ${selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)}`;
+    if (selectedStatuses.length > 0) {
+      headerText += ` - ${selectedStatuses.map(status => status.charAt(0).toUpperCase() + status.slice(1)).join(", ")}`;
     }
 
     return headerText;
@@ -227,51 +251,38 @@ function App() {
         <aside>
           <div className="filter-section">
             <h4>Statuses</h4>
-            <ul className="filterUl"> 
-              <li className="filterIl">
-                <a 
-                  href="#" 
-                  onClick={() => setSelectedStatus("all")} 
-                  className={selectedStatus === "all" ? "active" : ""}
-                >
-                  All statuses
-                </a>
-              </li>
-              <li className="filterIl">
-                <a 
-                  href="#" 
-                  onClick={() => setSelectedStatus("active")} 
-                  className={selectedStatus === "active" ? "active" : ""}
-                >
+            <ul className="filterUl">
+              <li
+                className={`filterIl ${selectedStatuses.includes("active") ? "selected" : ""}`}
+                onClick={() => toggleStatus("active")}
+              >
+                <label>
                   <FontAwesomeIcon icon={faCheck} /> Active
-                </a>
+                </label>
               </li>
-              <li className="filterIl">
-                <a 
-                  href="#" 
-                  onClick={() => setSelectedStatus("new")} 
-                  className={selectedStatus === "new" ? "active" : ""}
-                >
+              <li
+                className={`filterIl ${selectedStatuses.includes("new") ? "selected" : ""}`}
+                onClick={() => toggleStatus("new")}
+              >
+                <label>
                   <FontAwesomeIcon icon={faPen} /> New
-                </a>
+                </label>
               </li>
-              <li className="filterIl">
-                <a 
-                  href="#" 
-                  onClick={() => setSelectedStatus("hold")} 
-                  className={selectedStatus === "hold" ? "active" : ""}
-                >
+              <li
+                className={`filterIl ${selectedStatuses.includes("hold") ? "selected" : ""}`}
+                onClick={() => toggleStatus("hold")}
+              >
+                <label>
                   <FontAwesomeIcon icon={faPause} /> Hold
-                </a>
+                </label>
               </li>
-              <li className="filterIl">
-                <a 
-                  href="#" 
-                  onClick={() => setSelectedStatus("end")} 
-                  className={selectedStatus === "end" ? "active" : ""}
-                >
+              <li
+                className={`filterIl ${selectedStatuses.includes("end") ? "selected" : ""}`}
+                onClick={() => toggleStatus("end")}
+              >
+                <label>
                   <FontAwesomeIcon icon={faXmark} /> End
-                </a>
+                </label>
               </li>
             </ul>
           </div>
@@ -340,7 +351,7 @@ function App() {
             <AddProjectModal
               isOpen={isModalOpen}
               onClose={closeModal}
-              onAddProject={addProject}
+              onAddProject={handleAddProject}
             />
           </div>
         </main>
