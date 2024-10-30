@@ -22,17 +22,30 @@ public class TokenManager implements Serializable {
     private static final long serialVersionUID = 7008375124389347049L;
 
     //10 minutes
-    public static final long TOKEN_VALIDITY = 10 * 60 * 60;
+    public static final long TOKEN_VALIDITY = 10 * 60;
+
+    //1 day
+    public static final long REFRESH_TOKEN_VALIDITY = 24 * 60 * 60;
 
     @Value("${jwt.auth.converter.secret}")
     private String jwtSecret;
 
-    public String generateJwtToken(UserAccount userAccount) {
+    public String generateJwtToken(String refreshToken) {
+
         Map<String, Object> claims = new HashMap<>();
         claims.put("user_id", userAccount.getId());
         return Jwts.builder().setClaims(claims).setSubject(userAccount.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + TOKEN_VALIDITY * 1000))
+                .signWith(SignatureAlgorithm.HS512, jwtSecret).compact();
+    }
+
+    public String generateRefreshToken(UserAccount userAccount) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("user_id", userAccount.getId());
+        return Jwts.builder().setClaims(claims).setSubject(userAccount.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_VALIDITY * 1000))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret).compact();
     }
 

@@ -1,6 +1,7 @@
 package com.example.ProjViewAPI.controller;
 
 import com.example.ProjViewAPI.POJO.LoginResponse;
+import com.example.ProjViewAPI.POJO.RefreshResponse;
 import com.example.ProjViewAPI.entity.UserAccount;
 import com.example.ProjViewAPI.enumeration.Role;
 import com.example.ProjViewAPI.exception.LoginException;
@@ -33,8 +34,13 @@ public class JwtController {
 
     @SecurityRequirement(name = "bearerAuthorization")
     @GetMapping("/isTokenValid")
-    public Boolean isTokenValid(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+    public Boolean isTokenValid(){
         return true;
+    }
+
+    @PostMapping("/refresh")
+    public RefreshResponse refreshAccessToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+
     }
 
     @PostMapping
@@ -46,9 +52,11 @@ public class JwtController {
         }
         final UserAccount userAccount = userDetailsService.loadUserByUsername(request.getUsername());
         final String jwtToken = tokenManager.generateJwtToken(userAccount);
+        final String refreshToken = tokenManager.generateRefreshToken(userAccount);
         return new LoginResponse(
                 jwtToken,
-                userAccount.getAuthorities().contains(Role.ADMIN));
+                userAccount.getAuthorities().contains(Role.ADMIN),
+                refreshToken);
     }
 
 }
