@@ -1,7 +1,7 @@
 import React, { useState, useEffect,useRef } from "react";
 import './FileTree.css';
 
-const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
+const FileTree = ({ accessOToken, oneDriveFolder, changeFolder }) => {
     const [data, setData] = useState([]);
     const [openFolders, setOpenFolders] = useState({});
     const [currentPath, setCurrentPath] = useState([oneDriveFolder]);
@@ -27,12 +27,12 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
     }, [currentPath]);
 
     const fetchFolderContents = async (folderPath) => {
-        if (!accessToken) return;
+        if (!accessOToken) return;
         try {
             const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${folderPath}:/children`, {
                 method: "GET",
                 headers: {
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessOToken}`,
                     "Content-Type": "application/json",
                 },
             });
@@ -95,7 +95,7 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
                 const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${contextMenu.selectedNode.id}`, {
                     method: "DELETE",
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
+                        Authorization: `Bearer ${accessOToken}`,
                     },
                 });
                 if (response.ok) {
@@ -116,7 +116,7 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
                 const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${currentPath.join('/')}/${uploadFile.name}:/content`, {
                     method: "PUT",
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
+                        Authorization: `Bearer ${accessOToken}`,
                     },
                     body: uploadFile,
                 });
@@ -139,7 +139,7 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
                 const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${contextMenu.selectedNode.id}`, {
                     method: "PATCH",
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
+                        Authorization: `Bearer ${accessOToken}`,
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ name: newName }),
@@ -172,9 +172,14 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
                 const hasChildren = isFolder && node.folder.childCount > 0; // Determine if it has children
                 const isOpen = openFolders[node.id];
     
+                const handleClick = () => {
+                    if (!isFolder) return; // Exit early if it's not a folder
+                    toggleFolder(node);
+                };
+    
                 return (
                     <li key={node.id} className="file-tree-node" onContextMenu={(e) => handleContextMenu(e, node)}>
-                        <span onClick={() => toggleFolder(node)} className={`file-tree-item ${isFolder ? 'folder' : 'file'}`}>
+                        <span onClick={handleClick} className={`file-tree-item ${isFolder ? 'folder' : 'file'}`}>
                             {isFolder ? '📁' : '📄'} {node.name}
                         </span>
                     </li>
@@ -202,7 +207,7 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
             const response = await fetch(downloadUrl, {
                 method: 'GET',
                 headers: {
-                    Authorization: `Bearer ${accessToken}`, // Include the access token in the headers
+                    Authorization: `Bearer ${accessOToken}`, // Include the access token in the headers
                     'Content-Type': 'application/json',
                 },
             });
@@ -234,7 +239,7 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
                 const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${currentPath.join('/')}/${folderName}:/`, {
                     method: "PUT",
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
+                        Authorization: `Bearer ${accessOToken}`,
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ name: folderName, folder: {} }),

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import './AddProjectModal.css';
+import { BASE_URL } from "./authConfig"; // Import the named exports
 
-const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
+const AddProjectModal = ({ isOpen, onClose, token }) => {
   const [name, setName] = useState('');
   const [type, setType] = useState('Active');
   const [lead, setLead] = useState('');
@@ -24,17 +25,17 @@ const AddProjectModal = ({ isOpen, onClose, onAddProject }) => {
     };
 
     try {
-      const response = await fetch('/api/projects', {
+      const response = await fetch(`${BASE_URL}/api/projects`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(project)
       });
 
       if (response.ok) {
         const createdProject = await response.json();
-        onAddProject(createdProject);
       } else {
         throw new Error('Failed to create project');
       }

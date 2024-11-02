@@ -119,18 +119,15 @@ table th {
   margin: 2px 0; /* Add space between list items */
 }
 
-.filterIl {
-    margin: 2px 0; /* Add space between list items */
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 10px;
-    transition: background-color 0.3s;
-  }
-  
-  .filterIl.selected {
-    background-color: rgba(0, 122, 255, 0.2); /* Semi-transparent blue */
-  }
-  
+.filterIl a {
+  display: block; /* Make the link a block element to fill the entire list item */
+  text-decoration: none; /* Remove underline */
+  color: black; /* Default text color */
+  padding: 5px 20px; /* Increase padding for larger clickable area */
+  font-size: 18px; /* Increase font size for better readability */
+  border-radius: 5px; /* Rounded corners */
+  transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+}
 
 .filterIl a:hover {
   background-color: lightgray; /* Change background color on hover */
@@ -204,3 +201,6 @@ table th {
     z-index: 100; /* Place it under the modal */
     display: none; /* Hidden by default */
   }
+  
+
+

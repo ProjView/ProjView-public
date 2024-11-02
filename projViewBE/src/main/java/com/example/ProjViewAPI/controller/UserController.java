@@ -1,10 +1,14 @@
 package com.example.ProjViewAPI.controller;
 
 import com.example.ProjViewAPI.POJO.UserRegisterRequest;
+import com.example.ProjViewAPI.entity.User;
 import com.example.ProjViewAPI.security.JwtResponseModel;
 import com.example.ProjViewAPI.service.AccountService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,4 +37,11 @@ public class UserController {
         accountService.deleteUser(jwtToken);
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = accountService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
 }
+

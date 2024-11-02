@@ -3,7 +3,7 @@ import FileTree from "./FileTree"; // Import the FileTree component
 import './ProjectDetails.css'; // Import the CSS for styling
 import { BASE_URL } from "./authConfig"
 
-const ProjectDetails = ({ projectId, onClose, accessToken }) => {
+const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
     const [project, setProject] = useState(null); // State to hold project details
     const [username, setUsername] = useState(""); // State for username
     const [comment, setComment] = useState(""); // State for comment
@@ -18,7 +18,12 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     useEffect(() => {
         const fetchProjectDetails = async () => {
             try {
-                const response = await fetch(`${BASE_URL}/api/projects/${projectId}`);
+                const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
+                    method: 'GET',
+                    headers: { 'accept': '*/*',
+                                'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
+                    }
+                });
                 const projectData = await response.json();
                 setProject(projectData);
                 setProjectName(projectData.name || ""); // Set initial project name
@@ -40,13 +45,13 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     }, [projectId]);
 
     const fetchOneDriveData = async (oneDriveFolder) => {
-        if (!accessToken) return; // Ensure access token is available
+        if (!accessOToken) return; // Ensure access token is available
 
         try {
             const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${oneDriveFolder}:/children`, {
                 method: "GET",
                 headers: {
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessOToken}`,
                     "Content-Type": "application/json",
                 },
             });
@@ -66,7 +71,8 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
             const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
                 },
                 body: JSON.stringify(updatedData)
             });
@@ -114,13 +120,13 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     };
 
     const checkFolderExists = async (oneDriveFolder) => {
-        if (!accessToken) return false; // Ensure access token is available
+        if (!accessOToken) return false; // Ensure access token is available
 
         try {
             const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${oneDriveFolder}`, {
                 method: "GET",
                 headers: {
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessOToken}`,
                     "Content-Type": "application/json",
                 },
             });
@@ -133,13 +139,13 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     };
 
     const createFolder = async (newFolderName) => {
-        if (!accessToken) return; // Ensure access token is available
+        if (!accessOToken) return; // Ensure access token is available
 
         try {
             const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root:/${newFolderName}:/`, {
                 method: "PUT",
                 headers: {
-                    Authorization: `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessOToken}`,
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ name: newFolderName, folder: {} }),
@@ -160,9 +166,14 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
         const newFolderName = prompt("Enter the new OneDrive folder name:");
         if (newFolderName) {
             try {
+                if (!accessOToken) {
+                    throw new Error("Access token is missing. Please log in to access OneDrive.");
+                }
+    
                 // Check if the folder already exists
                 const exists = await checkFolderExists(newFolderName);
                 setOneDrivefolder([newFolderName]); // Need to refresh fileTree after this
+    
                 if (exists) {
                     // If it exists, fetch the folder data and update the project
                     await fetchOneDriveData(newFolderName);
@@ -173,6 +184,11 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
                 }
             } catch (error) {
                 console.error("Error updating OneDrive folder:", error);
+                if (error.message === "Access token is missing. Please log in to access OneDrive.") {
+                    alert("Access token is missing. Please log in to access OneDrive.");
+                } else {
+                    alert("An error occurred while updating the OneDrive folder. Please try again.");
+                }
             }
         }
     };
@@ -276,7 +292,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
                         </div>
                         <h2>Project Files</h2>
                         {folderData ? (
-                            <FileTree data={folderData} accessToken={accessToken} oneDriveFolder={oneDriveFolder} changeFolder={changeFolder} updateFolder={updateFolder}/> // Pass folder data and accessToken to FileTree
+                            <FileTree data={folderData} accessOToken={accessOToken} oneDriveFolder={oneDriveFolder} changeFolder={changeFolder} updateFolder={updateFolder}/> // Pass folder data and accessOToken to FileTree
                         ) : (
                             <div>
                                 <p>No OneDrive folder specified.</p>

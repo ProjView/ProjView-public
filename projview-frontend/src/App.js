@@ -6,6 +6,7 @@ import { faBriefcase, faCode, faTrash, faFileCirclePlus, faCheck, faXmark, faPen
 import ProjectDetails from "./ProjectDetails";
 import Header from './Header'; 
 import AddProjectModal from "./AddProjectModal"; 
+import Login from './Login';
 import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
 import { authConfig, BASE_URL } from "./authConfig"; // Import the named exports
 
@@ -18,13 +19,47 @@ function App() {
   const [accessToken, setAccessToken] = useState(null); // State for access token
   const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track login status
   const [userName, setUserName] = useState(""); // State to hold user's name
+  const [oneDriveUserName, setOneDriveUserName] = useState(""); // State to hold user's name
+  const [token, setToken] = useState(""); // Login token
   const navigate = useNavigate(); // Hook to programmatically navigate
   
-  // State for selected statuses
-  const [selectedStatuses, setSelectedStatuses] = useState(["new", "active"]);
+  // State for selected category and status
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const [projectDetailsModalOpen, setProjectDetailsModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
-  
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/projects`, {
+        method: 'GET',
+        headers: { 'accept': '*/*',
+                    'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
+        }
+      });
+      
+      if (response.ok) {
+        const projectList = await response.json();
+        setProjects(projectList);
+      } else {
+        throw new Error('Failed to fetch projects');
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
+  const handleLogin = (newToken, userName) => {
+    setToken(newToken); // Set the token in the state
+    setUserName(userName); // Set the userName in the state
+  };
+
+  // Trigger fetchProjects when the token state changes
+  useEffect(() => {
+    if (token) {
+      fetchProjects();
+    }
+  }, [token]);
+    
   // Initialize MSAL on component mount
   useEffect(() => {
     const initializeMSAL = async () => {
@@ -34,11 +69,11 @@ function App() {
 
         // Check for existing login state
         const storedAccessToken = localStorage.getItem('accessToken');
-        const storedUserName = localStorage.getItem('userName');
-        
+        const storedOUserName = localStorage.getItem('oneDriveUserName');
+
         if (storedAccessToken) {
           setAccessToken(storedAccessToken);
-          setUserName(storedUserName);
+          setOneDriveUserName(storedOUserName);
           setIsLoggedIn(true);
         }
       } catch (error) {
@@ -47,29 +82,6 @@ function App() {
     };
 
     initializeMSAL(); // Call the initialize function
-  }, []);
-
-
-  // Fetching projects from the backend API
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/api/projects`, {
-          method: 'GET',
-          headers: { 'accept': '*/*' }
-        });
-        
-        if (response.ok) {
-          const projectList = await response.json();
-          setProjects(projectList);
-        } else {
-          throw new Error('Failed to fetch projects');
-        }
-      } catch (error) {
-        console.error(error.message);
-      }
-    };
-    fetchProjects();
   }, []);
 
   // Function to authenticate user
@@ -87,7 +99,7 @@ function App() {
 
       // Store the access token and user name in localStorage
       localStorage.setItem('accessToken', tokenResponse.accessToken);
-      localStorage.setItem('userName', response.account.name);
+      localStorage.setItem('oneDriveUserName', response.account.name);
 
       // Fetch user profile information
       const userProfileResponse = await fetch("https://graph.microsoft.com/v1.0/me", {
@@ -99,8 +111,7 @@ function App() {
       });
 
       if (userProfileResponse.ok) {
-        const userProfileData = await userProfileResponse.json();
-        setUserName(userProfileData.displayName);
+        window.location.reload();
       } else {
         console.error("Failed to fetch user profile");
       }
@@ -116,6 +127,9 @@ function App() {
       setUserName("");
       localStorage.removeItem('accessToken');
       localStorage.removeItem('userName');
+      localStorage.removeItem("token");
+      localStorage.removeItem("tokenExpiration");
+      localStorage.removeItem("oneDriveUserName");
       // Optionally, you can also sign out from MSAL. Currently creates issues when logging out, it would be maybe wise to confront the documentation on MSAL.
       // msalInstance.logout(); 
     };
@@ -125,7 +139,9 @@ function App() {
     try {
       const response = await fetch(`${BASE_URL}/api/projects`, {
         method: 'GET',
-        headers: { 'accept': '*/*' }
+        headers: { 'accept': '*/*',
+          'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
+        }       
       });
       
       if (response.ok) {
@@ -149,6 +165,9 @@ function App() {
   const deleteProject = async (id) => {
     try {
         const response = await fetch(`${BASE_URL}/api/projects/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
+          },
           method: 'DELETE',
         });
 
@@ -174,65 +193,20 @@ function App() {
     await refreshProjects();
   };
 
-  // Adding a project
-  const addProject = async (projectData) => {
-    try {
-      const response = await fetch(`${BASE_URL}/api/projects`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(projectData)
-      });
-
-      if (response.ok) {
-        await refreshProjects();
-
-        // If the new project's status is "END" and it's not in the selectedStatuses, add it
-        if (projectData.type.toLowerCase() === "end" && !selectedStatuses.includes("end")) {
-          setSelectedStatuses([...selectedStatuses, "end"]);
-        }
-      } else {
-        throw new Error('Failed to add project');
-      }
-    } catch (error) {
-      console.error(error.message);
-    }
-  };
-
-  // Function to handle adding a project from the modal
-  const handleAddProject = async (projectData) => {
-    await addProject(projectData);
-    closeModal();
-  };
-
   // Filtered projects based on search term, selected category, and selected status
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name && project.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatuses.includes(project.type.toLowerCase());
+    const matchesStatus = selectedStatus === "all" || project.type.toLowerCase() === selectedStatus.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });
-
-  // Function to toggle status selection
-  const toggleStatus = (status) => {
-    setSelectedStatuses(prevStatuses => {
-      let updatedStatuses;
-      if (prevStatuses.includes(status)) {
-        updatedStatuses = prevStatuses.filter(s => s !== status);
-      } else {
-        updatedStatuses = [...prevStatuses, status];
-      }
-      return updatedStatuses;
-    });
-  };
 
   // Function to generate the header text based on selected category and status
   const getHeaderText = () => {
     let headerText = "All projects";
 
-    if (selectedStatuses.length > 0) {
-      headerText += ` - ${selectedStatuses.map(status => status.charAt(0).toUpperCase() + status.slice(1)).join(", ")}`;
+    if (selectedStatus !== "all") {
+      headerText += ` - ${selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)}`;
     }
 
     return headerText;
@@ -240,130 +214,151 @@ function App() {
 
   return (
     <div className="App" style={{ textAlign: "left" }}>
-      <Header onLogin={authenticateOneDrive} onLogout={logout} userName={isLoggedIn ? userName : null} />
-      <div className="aui-page-header">
-        <div className="aui-page-header-inner">
-          <h1>Browse projects</h1>
-        </div>
-      </div>
-      <div className="main-container">
-        {/* Sidebar */}
-        <aside>
-          <div className="filter-section">
-            <h4>Statuses</h4>
-            <ul className="filterUl">
-              <li
-                className={`filterIl ${selectedStatuses.includes("active") ? "selected" : ""}`}
-                onClick={() => toggleStatus("active")}
-              >
-                <label>
-                  <FontAwesomeIcon icon={faCheck} /> Active
-                </label>
-              </li>
-              <li
-                className={`filterIl ${selectedStatuses.includes("new") ? "selected" : ""}`}
-                onClick={() => toggleStatus("new")}
-              >
-                <label>
-                  <FontAwesomeIcon icon={faPen} /> New
-                </label>
-              </li>
-              <li
-                className={`filterIl ${selectedStatuses.includes("hold") ? "selected" : ""}`}
-                onClick={() => toggleStatus("hold")}
-              >
-                <label>
-                  <FontAwesomeIcon icon={faPause} /> Hold
-                </label>
-              </li>
-              <li
-                className={`filterIl ${selectedStatuses.includes("end") ? "selected" : ""}`}
-                onClick={() => toggleStatus("end")}
-              >
-                <label>
-                  <FontAwesomeIcon icon={faXmark} /> End
-                </label>
-              </li>
-            </ul>
+       {token ? (
+        <>
+          <Header onLogout={logout} onOneDriveLogin={authenticateOneDrive}/>
+          <div className="aui-page-header">
+            <div className="aui-page-header-inner">
+              <h1>Browse projects</h1>
+            </div>
           </div>
-        </aside>
-
-        {/* Main Content  
-        The positioning style on main content will need revisit if want to work on mobile, this in only temporary */}
-        <main style={{ maxHeight: "calc(100vh - 135px)", overflowY: "hidden" }}>
-          <div className="project-list-header">
-            <h2>{getHeaderText()}</h2> {/* Updated header text based on selections */}
-            <input
-              id="search-bar"
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search projects..."
-            />
-          </div>
-          <div style={{ maxHeight: "80%", overflowY: "auto" }}>
-          <table>
-            <thead>
-              <tr>
-                <th>Project</th>
-                <th>Status</th>
-                <th>Project lead</th>
-                <th>URL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProjects.map((project) => (
-                <tr key={project.id}>
-                  <td>
+          <div className="main-container">
+            {/* Sidebar */}
+            <aside>
+              <div className="filter-section">
+                <h4>Statuses</h4>
+                <ul className="filterUl"> 
+                  <li className="filterIl">
                     <a 
                       href="#" 
-                      onClick={(e) => {
-                          e.preventDefault(); // Prevent default anchor behavior
-                          openProjectDetailsModal(project.id); // Open the project details modal
-                      }} 
-                      style={{ textDecoration: 'underline', cursor: 'pointer' }}
+                      onClick={() => setSelectedStatus("all")} 
+                      className={selectedStatus === "all" ? "active" : ""}
                     >
-                      {project.name}
+                      All statuses
                     </a>
-                  </td>
-                  <td>           
-                    {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
-                    {project.type.toLowerCase() === "new" && <FontAwesomeIcon icon={faPen} />}
-                    {project.type.toLowerCase() === "hold" && <FontAwesomeIcon icon={faPause} />}
-                    {project.type.toLowerCase() === "end" && <FontAwesomeIcon icon={faXmark} />}
-                  </td>
-                  <td>{project.lead}</td>
-                  <td>{project.url || 'No URL'}</td>
-                  <td style={{ width: "10px" }}>
-                    <FontAwesomeIcon icon={faTrash} onClick={() => deleteProject(project.id)} style={{ cursor: 'pointer', color: 'red' }} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </li>
+                  <li className="filterIl">
+                    <a 
+                      href="#" 
+                      onClick={() => setSelectedStatus("active")} 
+                      className={selectedStatus === "active" ? "active" : ""}
+                    >
+                      <FontAwesomeIcon icon={faCheck} /> Active
+                    </a>
+                  </li>
+                  <li className="filterIl">
+                    <a 
+                      href="#" 
+                      onClick={() => setSelectedStatus("new")} 
+                      className={selectedStatus === "new" ? "active" : ""}
+                    >
+                      <FontAwesomeIcon icon={faPen} /> New
+                    </a>
+                  </li>
+                  <li className="filterIl">
+                    <a 
+                      href="#" 
+                      onClick={() => setSelectedStatus("hold")} 
+                      className={selectedStatus === "hold" ? "active" : ""}
+                    >
+                      <FontAwesomeIcon icon={faPause} /> Hold
+                    </a>
+                  </li>
+                  <li className="filterIl">
+                    <a 
+                      href="#" 
+                      onClick={() => setSelectedStatus("end")} 
+                      className={selectedStatus === "end" ? "active" : ""}
+                    >
+                      <FontAwesomeIcon icon={faXmark} /> End
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </aside>
+
+            {/* Main Content  
+            The positioning style on main content will need revisit if want to work on mobile, this in only temporary */}
+            <main style={{ maxHeight: "calc(100vh - 135px)", overflowY: "hidden" }}>
+              <div className="project-list-header">
+                <h2>{getHeaderText()}</h2> {/* Updated header text based on selections */}
+                <input
+                  id="search-bar"
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search projects..."
+                />
+              </div>
+              <div style={{ maxHeight: "80%", overflowY: "auto" }}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Status</th>
+                    <th>Project lead</th>
+                    <th>URL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProjects.map((project) => (
+                    <tr key={project.id}>
+                      <td>
+                        <a 
+                          href="#" 
+                          onClick={(e) => {
+                              e.preventDefault(); // Prevent default anchor behavior
+                              openProjectDetailsModal(project.id); // Open the project details modal
+                          }} 
+                          style={{ textDecoration: 'underline', cursor: 'pointer' }}
+                        >
+                          {project.name}
+                        </a>
+                      </td>
+                      <td>           
+                        {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
+                        {project.type.toLowerCase() === "new" && <FontAwesomeIcon icon={faPen} />}
+                        {project.type.toLowerCase() === "hold" && <FontAwesomeIcon icon={faPause} />}
+                        {project.type.toLowerCase() === "end" && <FontAwesomeIcon icon={faXmark} />}
+                      </td>
+                      <td>{project.lead}</td>
+                      <td>{project.url || 'No URL'}</td>
+                      <td style={{ width: "10px" }}>
+                        <FontAwesomeIcon icon={faTrash} onClick={() => deleteProject(project.id)} style={{ cursor: 'pointer', color: 'red' }} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              </div>
+
+              <div style={{ marginTop: "20px" }}>
+                <button onClick={openModal} className="add-project-btn">
+                  <FontAwesomeIcon icon={faFileCirclePlus} style={{ color: 'white' }} />
+                </button>
+
+                <AddProjectModal
+                  isOpen={isModalOpen}
+                  onClose={closeModal}
+                  token={token}
+                />
+              </div>
+            </main>
           </div>
 
-          <div style={{ marginTop: "20px" }}>
-            <button onClick={openModal} className="add-project-btn">
-              <FontAwesomeIcon icon={faFileCirclePlus} style={{ color: 'white' }} />
-            </button>
-
-            <AddProjectModal
-              isOpen={isModalOpen}
-              onClose={closeModal}
-              onAddProject={handleAddProject}
+          {projectDetailsModalOpen && (
+            <ProjectDetails 
+              projectId={currentProjectId} 
+              onClose={closeModal} 
+              accessOToken={accessToken}
+              token={token}
             />
-          </div>
-        </main>
-      </div>
-
-      {projectDetailsModalOpen && (
-        <ProjectDetails 
-          projectId={currentProjectId} 
-          onClose={closeModal} 
-          accessToken={accessToken}
-        />
-      )}
+          )}
+        </>
+        ) : (
+            // Render the login page if the user is not logged in
+            <Login onLogin={handleLogin} />
+        )}
     </div>
   );
 }

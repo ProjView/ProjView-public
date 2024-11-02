@@ -59,3 +59,32 @@
 .logout-button {
     background-color: #f44336; /* Red background for logout button */
 }
+
+/* Add this CSS to your Header.css file */
+.user-profile-modal {
+    position: absolute;
+    top: 60px; /* Adjust the top position as needed */
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 20px;
+    right:1%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.user-profile-modal h3 {
+    margin-top: 0;
+}
+
+.user-profile-modal p {
+    margin-bottom: 10px;
+    color:black;
+}
+
+.user-profile-modal button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
