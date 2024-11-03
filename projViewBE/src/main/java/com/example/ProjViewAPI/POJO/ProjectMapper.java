@@ -23,7 +23,7 @@ public class ProjectMapper {
                 .url(project.getUrl())
                 .OneDriveFolder(project.getOneDriveFolder())
                 .description(project.getDescription())
-                .group(project.getGroup())
+//                .group(project.getGroup())
                 .build();
     }
 }

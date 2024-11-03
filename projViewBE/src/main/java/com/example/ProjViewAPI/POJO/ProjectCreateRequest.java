@@ -1,15 +1,12 @@
 package com.example.ProjViewAPI.POJO;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
-@Builder
-public class ProjectDto {
-
-    private Long id;
+@AllArgsConstructor
+@NoArgsConstructor
+public class ProjectCreateRequest {
 
     private String name;
 

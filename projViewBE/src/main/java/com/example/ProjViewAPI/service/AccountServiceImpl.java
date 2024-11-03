@@ -5,6 +5,7 @@ import com.example.ProjViewAPI.POJO.UserRegisterRequest;
 import com.example.ProjViewAPI.entity.Admin;
 import com.example.ProjViewAPI.entity.User;
 import com.example.ProjViewAPI.exception.LoginException;
+import com.example.ProjViewAPI.exception.ProjectException;
 import com.example.ProjViewAPI.exception.RegisterException;
 import com.example.ProjViewAPI.repository.AdminRepository;
 import com.example.ProjViewAPI.repository.UserRepository;
@@ -33,6 +34,8 @@ public class AccountServiceImpl implements AccountService {
 
     private final UserRepository userRepository;
 
+    private final ProjectService projectService;
+
     @Override
     public ResponseEntity<JwtResponseModel> registerUser(UserRegisterRequest registerRequest) {
         if (userRepository.findByUsername(registerRequest.getUsername()).isPresent()) {
@@ -56,20 +59,6 @@ public class AccountServiceImpl implements AccountService {
         String jwtToken = tokenManager.generateJwtToken(admin);
 
         return ResponseEntity.status(201).body(new JwtResponseModel(jwtToken));
-    }
-
-    @Override
-    public void addAuthorityToUser(String username, Role authority) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            Set<Role> authorities = user.getAuthorities();
-            authorities.add(authority);
-            user.setAuthorities(authorities);
-            userRepository.save(user);
-        } else {
-            throw new RuntimeException("User not found");
-        }
     }
 
     @Override

@@ -10,12 +10,14 @@ import com.example.ProjViewAPI.security.JwtUserDetailsService;
 import com.example.ProjViewAPI.security.TokenManager;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/login")
 @RestController
-@CrossOrigin
+//@CrossOrigin(allowedHeaders = "*", origins = "*")
 public class JwtController {
 
     private final JwtUserDetailsService userDetailsService;
@@ -38,7 +40,7 @@ public class JwtController {
     }
 
     @PostMapping
-    public LoginResponse createToken(@RequestBody JwtRequestModel request) {
+    public ResponseEntity<LoginResponse> createToken(@RequestBody JwtRequestModel request) {
         try {
             authenticationService.authenticate(request);
         } catch (LoginException e) {
@@ -46,9 +48,9 @@ public class JwtController {
         }
         final UserAccount userAccount = userDetailsService.loadUserByUsername(request.getUsername());
         final String jwtToken = tokenManager.generateJwtToken(userAccount);
-        return new LoginResponse(
+        return ResponseEntity.status(HttpStatus.OK).body(new LoginResponse(
                 jwtToken,
-                userAccount.getAuthorities().contains(Role.ADMIN));
+                userAccount.getAuthorities().contains(Role.ADMIN)));
     }
 
 }

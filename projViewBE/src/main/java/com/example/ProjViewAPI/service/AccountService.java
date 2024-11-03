@@ -5,11 +5,10 @@ import com.example.ProjViewAPI.POJO.UserRegisterRequest;
 import com.example.ProjViewAPI.entity.User;
 import com.example.ProjViewAPI.enumeration.Role;
 import com.example.ProjViewAPI.security.JwtResponseModel;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Set;
-
-import org.springframework.http.ResponseEntity;
 
 public interface AccountService {
 
@@ -20,8 +19,6 @@ public interface AccountService {
     List<User> getAllUsers();
 
     void deleteUser(String jwtToken);
-    
-    void addAuthorityToUser(String username, Role authority);
 
     Set<Role> getUserAuthorities(String username);
 

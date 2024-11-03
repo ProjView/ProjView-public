@@ -1,7 +1,10 @@
 package com.example.ProjViewAPI.service;
 
+import com.example.ProjViewAPI.POJO.ProjectCreateRequest;
 import com.example.ProjViewAPI.POJO.ProjectDto;
 import com.example.ProjViewAPI.entity.Project;
+import com.example.ProjViewAPI.enumeration.ProjectRole;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -9,15 +12,21 @@ public interface ProjectService {
 
     List<ProjectDto> getAllProjects();
 
-    ProjectDto addProject(Project project);
+    ProjectDto addProject(ProjectCreateRequest projectCreateRequest, String jwtToken);
 
     void deleteProject(Long id);
 
-    List<ProjectDto> addProjects(List<Project> projects);
+//    List<ProjectDto> addProjects(List<Project> projects);
 
-    Project getProjectById(Long id);
+    ProjectDto getProjectById(Long id);
 
     ProjectDto updateProject(Long id, Project updatedProject);
 
-    List<ProjectDto> getAllProjects(Long group);
+    List<ProjectDto> getAllProjects(String jwtToken);
+
+    ResponseEntity<String> addAuthorityToUser(String authorizationHeader, Long projectId, ProjectRole authority);
+
+    ResponseEntity<String> removeAuthorityToUser(String authorizationHeader, Long projectId, ProjectRole authority);
+
+    ResponseEntity<String> addUserToProject(String jwtToken, Long projectId, String username);
 }
