@@ -22,6 +22,7 @@ const AddProjectModal = ({ isOpen, onClose, token }) => {
       type,
       lead,
       url: url || null,
+      group: 0
     };
 
     try {

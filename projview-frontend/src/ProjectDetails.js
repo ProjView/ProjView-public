@@ -13,7 +13,72 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
     const [description, setDescription] = useState(""); // State for project description
     const [folderData, setFolderData] = useState(null); // State to hold folder data
     const [oneDriveFolder, setOneDrivefolder] = useState(""); // State to hold oneDriveFolder name
-    
+    const [userRoles, setUserRoles] = useState([]); // State for user roles
+    const [assignedRoles, setAssignedRoles] = useState([]); // State for roles assigned to the project
+
+    // Define role constants
+    const ROLES = {
+        USER: 1,
+        DEVELOPER: 2,
+        DEVLEAD: 4,
+        PROJECTMANAGER: 8,
+        CONSULTANT: 16,
+        ADMIN: 32
+    };
+
+    // Function to decode group number into role names
+    const getRolesFromGroupNumber = (groupNumber) => {
+        const roles = [];
+        for (const [role, value] of Object.entries(ROLES)) {
+            if (groupNumber & value) { // Check if the bit is set
+                roles.push(role); // Add role name to the array
+            }
+        }
+        return roles;
+    };
+
+    // Function to calculate group number from assigned roles
+    const calculateGroupNumber = () => {
+        return assignedRoles.reduce((acc, role) => {
+            const value = ROLES[role]; // Get the bit value for the role
+            return acc | value; // Use bitwise OR to accumulate the group number
+        }, 0);
+    };
+
+    // Function to add a role to the project
+    const addRole = (role) => {
+        if (!assignedRoles.includes(role)) {
+            setAssignedRoles([...assignedRoles, role]);
+        }
+    };
+
+    // Function to remove a role from the project
+    const removeRole = (role) => {
+        if (userRoles.includes(role)) { // Only allow removal if the user has the role
+            setAssignedRoles(assignedRoles.filter(r => r !== role));
+        }
+    };
+
+    // Fetch user roles from /api/user/authorization
+    const fetchUserRoles = async () => {
+        try {
+            const getUserName = localStorage.getItem("userName");
+            const response = await fetch(`${BASE_URL}/api/user/authorities?username=${getUserName}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}` // Include the access token
+                }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setUserRoles(data.authorities); // Assuming authorities is an array of role names
+            } else {
+                console.error("Failed to fetch user roles");
+            }
+        } catch (error) {
+            console.error("Error fetching user roles:", error);
+        }
+    };
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -31,6 +96,8 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
                 setDescription(projectData.description || "");
                 setSelectedStatus(projectData.type || "New"); 
                 setOneDrivefolder(projectData.oneDriveFolder || ""); // Set initial oneDriveFolder
+                // Decode the group number to set assigned roles
+                setAssignedRoles(getRolesFromGroupNumber(projectData.group || 0)); // Assuming groupNumber is part of projectData
 
                 // Check if projectName is defined before fetching OneDrive data
                 if (projectData.oneDriveFolder) {
@@ -40,7 +107,7 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
             console.error("Error fetching project details:", error);
             }
         };
-
+        fetchUserRoles(); // Fetch user roles when component mounts
         fetchProjectDetails();
     }, [projectId]);
 
@@ -111,6 +178,7 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
             type: selectedStatus,
             description: description,
             oneDriveFolder: oneDriveFolder,
+            group: calculateGroupNumber(), // Calculate group number from assigned roles
         };
         updateProject(updatedData);
         setTimeout(() => {
@@ -223,7 +291,7 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
                 <div className="modal right-slide-modal">
                     <div className="modal-content">
                         <span className="close" onClick={closeModal}>&times;</span>
-                        <h2>
+                        <div className="project-header">
                             <div className="project-name-section">
                                 <label>Name:</label>
                                 <input
@@ -232,7 +300,36 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
                                     onChange={(e) => setProjectName(e.target.value)}
                                 />
                             </div>
-                        </h2>
+                        </div>
+
+                        {/* Manage Roles Section */}
+                        <div className="manage-roles">
+                            <h3>Manage Roles:</h3>
+                            <div className="roles-container">
+                                <div className="available-roles">
+                                    <h4>Available Roles:</h4>
+                                    {userRoles.filter(role => !assignedRoles.includes(role)).map(role => ( // Filter out assigned roles
+                                        <div key={role} className="role-item">
+                                            <span className="role-name">{role}</span>
+                                            <button onClick={() => addRole(role)} className="add-role-button">+</button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="assigned-roles">
+                                    <h4>Assigned Roles:</h4>
+                                    {assignedRoles.map(role => (
+                                        <div key={role} className="role-item assigned-role-item">
+                                            <span className="role-name">{role}</span>
+                                            {userRoles.includes(role) && ( // Only show remove button if user has the role
+                                                <button onClick={() => removeRole(role)} className="remove-role-button">-</button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="status-priority">
                             <div className="Status">
                                 <label>Status:</label>

@@ -21,6 +21,7 @@ function App() {
   const [userName, setUserName] = useState(""); // State to hold user's name
   const [oneDriveUserName, setOneDriveUserName] = useState(""); // State to hold user's name
   const [token, setToken] = useState(""); // Login token
+  const [userGroupNumber, setUserGroupNumber] = useState(0);
   const navigate = useNavigate(); // Hook to programmatically navigate
   
   // State for selected category and status
@@ -30,16 +31,40 @@ function App() {
 
   const fetchProjects = async () => {
     try {
+      const getUserName = localStorage.getItem("userName");
+      // Step 1: Fetch the group number for the given username
+      const responseGroup = await fetch(`${BASE_URL}/api/user/authorities?username=${getUserName}`, {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json',
+          'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
+        }
+      });
+
+      if (!responseGroup.ok) {
+        throw new Error('Failed to fetch authorities');
+      }
+
+      const groupData = await responseGroup.json(); // Parse the JSON response
+      const gN = groupData.groupNumber;
+      setUserGroupNumber(gN); // Set the group number state
+
+      // Step 2: Fetch projects by group number
       const response = await fetch(`${BASE_URL}/api/projects`, {
         method: 'GET',
-        headers: { 'accept': '*/*',
-                    'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
+        headers: {
+          'accept': '*/*',
+          'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
         }
       });
       
       if (response.ok) {
         const projectList = await response.json();
-        setProjects(projectList);
+        const filteredProjects = projectList.filter(project => {
+          // Check if any of the user's groups match the project's group number
+          return (project.group === 0 || project.group & gN) !== 0; // If there's any overlap, include the project
+        });
+        setProjects(filteredProjects);
       } else {
         throw new Error('Failed to fetch projects');
       }
@@ -146,7 +171,11 @@ function App() {
       
       if (response.ok) {
         const projectList = await response.json();
-        setProjects(projectList);
+        const filteredProjects = projectList.filter(project => {
+          // Check if any of the user's groups match the project's group number
+          return (project.group === 0 || project.group & userGroupNumber) !== 0; // If there's any overlap, include the project
+        });
+        setProjects(filteredProjects);
       } else {
         throw new Error('Failed to fetch projects');
       }
