@@ -1,21 +1,24 @@
 package com.example.ProjViewAPI.security;
 
-import java.io.Serial;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.Serializable;
 
+@Getter
+@Setter
 public class JwtResponseModel implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+    private String token;
 
-    private final String token;
+    private String refreshToken;
 
-    public JwtResponseModel(String token) {
+    private boolean isAdmin;
+
+    public <T> JwtResponseModel(String token, boolean admin, String refreshToken) {
         this.token = token;
-    }
-
-    public String getToken() {
-        return token;
+        this.refreshToken = refreshToken;
+        this.isAdmin = admin;
     }
 }
 

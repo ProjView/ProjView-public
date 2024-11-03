@@ -30,8 +30,7 @@ public class TokenManager implements Serializable {
     @Value("${jwt.auth.converter.secret}")
     private String jwtSecret;
 
-    public String generateJwtToken(String refreshToken) {
-
+    public String generateJwtToken(UserAccount userAccount) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("user_id", userAccount.getId());
         return Jwts.builder().setClaims(claims).setSubject(userAccount.getUsername())

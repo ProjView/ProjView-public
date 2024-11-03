@@ -49,7 +49,8 @@ public class SecurityConfig {
                                         "/webjars/**",
                                         "/swagger-ui.html",
                                         "/api/login",
-                                        "/api/user/register"
+                                        "/api/user/register",
+                                        "api/login/refresh"
                                 ).permitAll()
 //                        .requestMatchers("/ambulance/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()

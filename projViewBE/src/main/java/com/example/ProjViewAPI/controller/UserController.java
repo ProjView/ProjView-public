@@ -1,6 +1,6 @@
 package com.example.ProjViewAPI.controller;
 
-import com.example.ProjViewAPI.POJO.UserRegisterRequest;
+import com.example.ProjViewAPI.security.JwtRequestModel;
 import com.example.ProjViewAPI.security.JwtResponseModel;
 import com.example.ProjViewAPI.service.AccountService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -21,8 +21,8 @@ public class UserController {
 
     @Transactional
     @PostMapping("/register")
-    public ResponseEntity<JwtResponseModel> registerUser(@RequestBody UserRegisterRequest registerRequest) {
-        return accountService.registerUser(registerRequest);
+    public ResponseEntity<JwtResponseModel> registerUser(@RequestBody JwtRequestModel jwtRequestModel) {
+        return accountService.registerUser(jwtRequestModel);
     }
 
     @Transactional
