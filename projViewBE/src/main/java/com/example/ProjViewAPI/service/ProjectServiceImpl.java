@@ -22,6 +22,11 @@ public class ProjectServiceImpl implements ProjectService{
     }
 
     @Override
+    public List<ProjectDto> getAllProjects(Long group) {
+        return ProjectMapper.projectListToDTO(projectRepository.findByGroup(group));
+    }
+
+    @Override
     public ProjectDto addProject(Project project) {
         return ProjectMapper.projectEntityToDto(projectRepository.save(project));
     }
@@ -53,6 +58,8 @@ public class ProjectServiceImpl implements ProjectService{
         existingProject.setUrl(updatedProject.getUrl());
         existingProject.setDescription(updatedProject.getDescription());
         existingProject.setOneDriveFolder(updatedProject.getOneDriveFolder());
+        existingProject.setGroup(updatedProject.getGroup());
+        
         // Update other fields as necessary
         return ProjectMapper.projectEntityToDto(projectRepository.save(existingProject));
     }

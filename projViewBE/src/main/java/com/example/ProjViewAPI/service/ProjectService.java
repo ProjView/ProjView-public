@@ -18,4 +18,6 @@ public interface ProjectService {
     Project getProjectById(Long id);
 
     ProjectDto updateProject(Long id, Project updatedProject);
+
+    List<ProjectDto> getAllProjects(Long group);
 }

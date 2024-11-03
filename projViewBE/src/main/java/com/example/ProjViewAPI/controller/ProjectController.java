@@ -11,16 +11,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-// @SecurityRequirement(name = "bearerAuthorization") // I currently don't know why but this temporarily fucks up everything for ProjectController, maybe it would be wise to comfront the OpenAPI documentation. It disables parameters when not authorized but after authorizing the parameters don't show up.
+@SecurityRequirement(name = "bearerAuthorization") // I currently don't know why but this temporarily fucks up everything for ProjectController, maybe it would be wise to comfront the OpenAPI documentation. It disables parameters when not authorized but after authorizing the parameters don't show up.
 @RequiredArgsConstructor
 @RequestMapping("/api/projects")
 public class ProjectController {
-
     private final ProjectServiceImpl projectService;
 
     @GetMapping
     public List<ProjectDto> getAllProjects() {
         return projectService.getAllProjects();
+    }
+
+    @GetMapping("/byGroup") // Use a different endpoint for getting projects by group
+    public List<ProjectDto> getAllProjectsByGroup(@RequestParam Long group) {
+        return projectService.getAllProjects(group);
     }
 
     @PostMapping

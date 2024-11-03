@@ -22,4 +22,6 @@ public class ProjectDto {
     private String OneDriveFolder;
 
     private String description;
+
+    private Integer group;
 }

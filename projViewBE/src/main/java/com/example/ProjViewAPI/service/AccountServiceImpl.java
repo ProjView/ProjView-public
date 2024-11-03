@@ -15,9 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.example.ProjViewAPI.enumeration.Role; // Import the Role class
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set; // Import Set
 
 @RequiredArgsConstructor
 @Service
@@ -57,6 +59,20 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public void addAuthorityToUser(String username, Role authority) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            Set<Role> authorities = user.getAuthorities();
+            authorities.add(authority);
+            user.setAuthorities(authorities);
+            userRepository.save(user);
+        } else {
+            throw new RuntimeException("User not found");
+        }
+    }
+
+    @Override
     public void deleteUser(String jwtToken) {
         String username = this.tokenManager.getUsernameFromToken(jwtToken);
         Optional<User> userOptional = userRepository.findByUsername(username);
@@ -70,4 +86,23 @@ public class AccountServiceImpl implements AccountService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+    
+    public Set<Role> getUserAuthorities(String username) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isPresent()) {
+            return userOptional.get().getAuthorities();
+        } else {
+            throw new RuntimeException("User not found");
+        }
+    }
+
+    public void removeAuthorityFromUser(String username, Role authority) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Remove the authority from the user
+        user.getAuthorities().remove(authority);
+        userRepository.save(user); // Save the updated user back to the database
+    }
+
 }

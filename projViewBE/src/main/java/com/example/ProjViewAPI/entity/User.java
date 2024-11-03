@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Collections;
+import java.util.Set; // Import Set
 
 @Getter
 @Setter
@@ -22,6 +23,9 @@ public class User extends UserAccount {
 
     public User() {
         super();
+    }
+    public void setAuthorities(Set<Role> authorities) {
+        this.authorities = authorities;
     }
 }
 

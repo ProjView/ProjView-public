@@ -57,7 +57,7 @@ public abstract class UserAccount implements UserDetails, CredentialsContainer {
     private final String username;
 
     @ElementCollection(fetch = FetchType.EAGER)
-    private final Set<Role> authorities;
+    protected Set<Role> authorities;
 
     private final boolean accountNonExpired;
 
