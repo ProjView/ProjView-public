@@ -46,16 +46,40 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
     };
 
     // Function to add a role to the project
-    const addRole = (role) => {
-        if (!assignedRoles.includes(role)) {
-            setAssignedRoles([...assignedRoles, role]);
+    //TODO prida rolu aj na backend <base/api/projects/addAuthority>
+    const addRole = async (role) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/projects/addAuthority?projectId=${projectId}&authority=${role}`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`, // Replace `token` with your actual token variable
+                    "Content-Type": "application/json"
+                }
+            });
+        }catch (e) {
+            console.error("Error while adding role.");
+        }
+        if (!userRoles.includes(role)) {
+            setUserRoles([...userRoles, role]);
         }
     };
 
     // Function to remove a role from the project
-    const removeRole = (role) => {
+    //TODO odstrani rolu aj na backend <base/api/projects/removeAuthority>
+    const removeRole = async (role) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/projects/removeAuthority?projectId=${projectId}&authority=${role}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`, // Replace `token` with your actual token variable
+                    "Content-Type": "application/json"
+                }
+            });
+        }catch (e) {
+            console.error("Error while adding role.");
+        }
         if (userRoles.includes(role)) { // Only allow removal if the user has the role
-            setAssignedRoles(assignedRoles.filter(r => r !== role));
+            setUserRoles(userRoles.filter(r => r !== role));
         }
     };
 
@@ -138,6 +162,7 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
 
     const updateProject = async (updatedData) => {
         try {
+            console.log(updatedData);
             const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
                 method: 'PUT',
                 headers: {
@@ -181,7 +206,7 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
             type: selectedStatus,
             description: description,
             oneDriveFolder: oneDriveFolder,
-            group: calculateGroupNumber(), // Calculate group number from assigned roles
+            // group: calculateGroupNumber(), // Calculate group number from assigned roles
         };
         updateProject(updatedData);
         setTimeout(() => {
@@ -310,14 +335,14 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
                             <h3>Manage Roles:</h3>
                             <div className="roles-container">
                                 <div className="available-roles">
-                                    <h4>Assigned Roles:</h4>
+                                    <h4>Available Roles:</h4>
                                     {/*{userRoles.filter(role => !assignedRoles.includes(role)).map(role => ( // Filter out assigned roles*/}
                                     {/*    <div key={role} className="role-item">*/}
                                     {/*        <span className="role-name">{role}</span>*/}
                                     {/*        <button onClick={() => addRole(role)} className="add-role-button">+</button>*/}
                                     {/*    </div>*/}
                                     {/*))}*/}
-                                    {userRoles.map(role => (
+                                    {assignedRoles.filter(role => !userRoles.includes(role)).map(role => (
                                        <div key={role} className="role-item">
                                            <span className="role-name">{role}</span>
                                            <button onClick={() => addRole(role)} className="add-role-button">+</button>
@@ -326,8 +351,8 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
                                 </div>
 
                                 <div className="assigned-roles">
-                                    <h4>Available Roles:</h4>
-                                    {assignedRoles.map(role => (
+                                    <h4>Assigned Roles:</h4>
+                                    {userRoles.map(role => (
                                         <div key={role} className="role-item assigned-role-item">
                                             <span className="role-name">{role}</span>
                                             {userRoles.includes(role) && ( // Only show remove button if user has the role

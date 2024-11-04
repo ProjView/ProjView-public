@@ -148,11 +148,7 @@ function App() {
       
       if (response.ok) {
         const projectList = await response.json();
-        const filteredProjects = projectList.filter(project => {
-          // Check if any of the user's groups match the project's group number
-          return (project.group === 0 || project.group & userGroupNumber) !== 0; // If there's any overlap, include the project
-        });
-        setProjects(filteredProjects);
+        setProjects(projectList);
       } else {
         throw new Error('Failed to fetch projects');
       }
