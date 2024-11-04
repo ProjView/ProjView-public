@@ -9,10 +9,13 @@ public class LoginResponse {
 
     private String token;
 
+    private String refreshToken;
+
     private boolean isAdmin;
 
-    public <T> LoginResponse(String token, boolean admin) {
+    public <T> LoginResponse(String token, boolean admin, String refreshToken) {
         this.token = token;
+        this.refreshToken = refreshToken;
         this.isAdmin = admin;
     }
 }

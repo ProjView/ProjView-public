@@ -1,56 +1,49 @@
 package com.example.ProjViewAPI.controller;
 
-import com.example.ProjViewAPI.POJO.LoginResponse;
-import com.example.ProjViewAPI.entity.UserAccount;
-import com.example.ProjViewAPI.enumeration.Role;
 import com.example.ProjViewAPI.exception.LoginException;
 import com.example.ProjViewAPI.security.AuthenticationService;
 import com.example.ProjViewAPI.security.JwtRequestModel;
-import com.example.ProjViewAPI.security.JwtUserDetailsService;
-import com.example.ProjViewAPI.security.TokenManager;
+import com.example.ProjViewAPI.security.JwtResponseModel;
+import com.example.ProjViewAPI.service.AccountService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/login")
+@RequiredArgsConstructor
 @RestController
 //@CrossOrigin(allowedHeaders = "*", origins = "*")
 public class JwtController {
 
-    private final JwtUserDetailsService userDetailsService;
-
     private final AuthenticationService authenticationService;
 
-    private final TokenManager tokenManager;
-
-    public JwtController(JwtUserDetailsService userDetailsService, AuthenticationManager authenticationManager,
-                         TokenManager tokenManager, AuthenticationService authenticationService) {
-        this.userDetailsService = userDetailsService;
-        this.tokenManager = tokenManager;
-        this.authenticationService = authenticationService;
-    }
+    private final AccountService accountService;
 
     @SecurityRequirement(name = "bearerAuthorization")
     @GetMapping("/isTokenValid")
-    public Boolean isTokenValid(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader){
+    public Boolean isTokenValid() {
         return true;
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtResponseModel> refreshAccessToken(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        String jwtToken = authorizationHeader.substring("Bearer ".length()).trim();
+        return accountService.refreshAccessToken(jwtToken);
+    }
+
     @PostMapping
-    public ResponseEntity<LoginResponse> createToken(@RequestBody JwtRequestModel request) {
+    public ResponseEntity<JwtResponseModel> login(@RequestBody JwtRequestModel request) {
         try {
             authenticationService.authenticate(request);
         } catch (LoginException e) {
             throw new LoginException(e.getMessage(), e.getStatus());
         }
-        final UserAccount userAccount = userDetailsService.loadUserByUsername(request.getUsername());
-        final String jwtToken = tokenManager.generateJwtToken(userAccount);
-        return ResponseEntity.status(HttpStatus.OK).body(new LoginResponse(
-                jwtToken,
-                userAccount.getAuthorities().contains(Role.ADMIN)));
+        return accountService.generateJwtResponse(request.getUsername());
     }
 
 }
