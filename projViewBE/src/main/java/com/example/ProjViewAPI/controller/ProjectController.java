@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @SecurityRequirement(name = "bearerAuthorization")
@@ -102,5 +103,14 @@ public class ProjectController {
             @RequestParam ProjectRole authority) {
         String jwtToken = authorizationHeader.substring("Bearer ".length()).trim();
         return projectService.removeAuthorityToUser(jwtToken, projectId, authority);
+    }
+
+    @SecurityRequirement(name = "bearerAuthorization")
+    @GetMapping("/getAuthority")
+    public ResponseEntity<Set<ProjectRole>> getAuthorityFromUser(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader,
+            @RequestParam Long projectId) {
+        String jwtToken = authorizationHeader.substring("Bearer ".length()).trim();
+        return projectService.getAuthorityFromUser(jwtToken, projectId);
     }
 }

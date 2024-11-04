@@ -16,10 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -60,6 +57,8 @@ public class ProjectServiceImpl implements ProjectService {
                 .url(projectCreateRequest.getUrl())
                 .OneDriveFolder(projectCreateRequest.getOneDriveFolder())
                 .description(projectCreateRequest.getDescription())
+                .users(new HashSet<>())
+                .userRoles(new HashMap<>())
                 .build();
         project.getUsers().add(userOptional.get());
         Set<ProjectRole> projectRoles = new HashSet<>();
@@ -141,6 +140,21 @@ public class ProjectServiceImpl implements ProjectService {
         usersRoles.getUserRoles().remove(authority);
 
         return ResponseEntity.ok().body("Authority removed successfully: " + authority);
+    }
+
+    @Override
+    public ResponseEntity<Set<ProjectRole>> getAuthorityFromUser(String jwtToken, Long projectId) {
+        String username = this.tokenManager.getUsernameFromToken(jwtToken);
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        if (userOptional.isEmpty()) {
+            throw new ProjectException("User not found", HttpStatus.NOT_FOUND.value());
+        }
+        Optional<Project> projectOptional = projectRepository.findById(projectId);
+        if (projectOptional.isEmpty()) {
+            throw new ProjectException("Project not found", HttpStatus.NOT_FOUND.value());
+        }
+        UsersRoles usersRoles = projectOptional.get().getUserRoles().get(userOptional.get());
+        return ResponseEntity.ok(usersRoles.getUserRoles());
     }
 
     @Override

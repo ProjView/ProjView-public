@@ -53,7 +53,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         } else {
             System.out.println("Bearer String not found in token");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
         if (null != username && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);

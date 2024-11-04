@@ -7,6 +7,7 @@ import com.example.ProjViewAPI.enumeration.ProjectRole;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.Set;
 
 public interface ProjectService {
 
@@ -29,4 +30,6 @@ public interface ProjectService {
     ResponseEntity<String> removeAuthorityToUser(String authorizationHeader, Long projectId, ProjectRole authority);
 
     ResponseEntity<String> addUserToProject(String jwtToken, Long projectId, String username);
+
+    ResponseEntity<Set<ProjectRole>> getAuthorityFromUser(String jwtToken, Long projectId);
 }
