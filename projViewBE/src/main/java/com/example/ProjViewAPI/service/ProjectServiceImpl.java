@@ -91,7 +91,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectDto updateProject(Long id, Project updatedProject) {
+    public ProjectDto updateProject(Long id, ProjectDto updatedProject) {
         Project existingProject = projectRepository.findById(id).orElseThrow(() -> new RuntimeException("Project not found"));
         existingProject.setName(updatedProject.getName());
         existingProject.setType(updatedProject.getType());
@@ -121,6 +121,7 @@ public class ProjectServiceImpl implements ProjectService {
             throw new ProjectException("User is not part of this project", 403);
         }
         usersRoles.getUserRoles().add(authority);
+        projectRepository.save(projectOptional.get());
 
         return ResponseEntity.ok().body("Authority added successfully: " + authority);
     }
@@ -138,6 +139,7 @@ public class ProjectServiceImpl implements ProjectService {
         }
         UsersRoles usersRoles = projectOptional.get().getUserRoles().get(userOptional.get());
         usersRoles.getUserRoles().remove(authority);
+        projectRepository.save(projectOptional.get());
 
         return ResponseEntity.ok().body("Authority removed successfully: " + authority);
     }

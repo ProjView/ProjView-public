@@ -18,7 +18,6 @@ import java.util.Set;
 
 @RestController
 @SecurityRequirement(name = "bearerAuthorization")
-// I currently don't know why but this temporarily fucks up everything for ProjectController, maybe it would be wise to comfront the OpenAPI documentation. It disables parameters when not authorized but after authorizing the parameters don't show up.
 @RequiredArgsConstructor
 @RequestMapping("/api/projects")
 public class ProjectController {
@@ -44,11 +43,6 @@ public class ProjectController {
         return projectService.getAllProjects(jwtToken);
     }
 
-//    @GetMapping("/byGroup") // Use a different endpoint for getting projects by group
-//    public List<ProjectDto> getAllProjectsByGroup(@RequestParam Long group) {
-//        return projectService.getAllProjects(group);
-//    }
-
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProjectDto createProject(
@@ -58,14 +52,6 @@ public class ProjectController {
         String jwtToken = authorizationHeader.substring("Bearer ".length()).trim();
         return projectService.addProject(projectCreateRequest, jwtToken);
     }
-
-
-//    @PostMapping("/bulk") // New endpoint for bulk creation
-//    @ResponseStatus(HttpStatus.CREATED)
-//    public List<ProjectDto> createProjects(@RequestBody List<Project> projects) {
-//        return projectService.addProjects(projects); // Call the service method for bulk addition
-//    }
-
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -81,7 +67,8 @@ public class ProjectController {
 
 
     @PutMapping("/{id}")
-    public ProjectDto updateProject(@PathVariable Long id, @RequestBody Project updatedProject) {
+    public ProjectDto updateProject(@PathVariable Long id, @RequestBody ProjectDto updatedProject) {
+//        return null;
         return projectService.updateProject(id, updatedProject);
     }
 

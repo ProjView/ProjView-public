@@ -21,7 +21,7 @@ public interface ProjectService {
 
     ProjectDto getProjectById(Long id);
 
-    ProjectDto updateProject(Long id, Project updatedProject);
+    ProjectDto updateProject(Long id, ProjectDto updatedProject);
 
     List<ProjectDto> getAllProjects(String jwtToken);
 
