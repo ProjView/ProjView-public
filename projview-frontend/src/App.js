@@ -31,25 +31,6 @@ function App() {
 
   const fetchProjects = async () => {
     try {
-      const getUserName = localStorage.getItem("userName");
-      // Step 1: Fetch the group number for the given username
-      const responseGroup = await fetch(`${BASE_URL}/api/user/authorities?username=${getUserName}`, {
-        method: 'GET',
-        headers: {
-          'accept': 'application/json',
-          'Authorization': `Bearer ${token}` // Include the access token in the Authorization header
-        }
-      });
-
-      if (!responseGroup.ok) {
-        throw new Error('Failed to fetch authorities');
-      }
-
-      const groupData = await responseGroup.json(); // Parse the JSON response
-      const gN = groupData.groupNumber;
-      setUserGroupNumber(gN); // Set the group number state
-
-      // Step 2: Fetch projects by group number
       const response = await fetch(`${BASE_URL}/api/projects`, {
         method: 'GET',
         headers: {
@@ -60,11 +41,7 @@ function App() {
       
       if (response.ok) {
         const projectList = await response.json();
-        const filteredProjects = projectList.filter(project => {
-          // Check if any of the user's groups match the project's group number
-          return (project.group === 0 || project.group & gN) !== 0; // If there's any overlap, include the project
-        });
-        setProjects(filteredProjects);
+        setProjects(projectList);
       } else {
         throw new Error('Failed to fetch projects');
       }

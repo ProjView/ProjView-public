@@ -62,16 +62,18 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
     // Fetch user roles from /api/user/authorization
     const fetchUserRoles = async () => {
         try {
-            const getUserName = localStorage.getItem("userName");
-            const response = await fetch(`${BASE_URL}/api/user/authorities?username=${getUserName}`, {
+            // const getUserName = localStorage.getItem("userName");
+            const response = await fetch(`${BASE_URL}/api/projects/getAuthority?projectId=${projectId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}` // Include the access token
                 }
             });
+
             if (response.ok) {
                 const data = await response.json();
-                setUserRoles(data.authorities); // Assuming authorities is an array of role names
+                console.log(data);
+                setUserRoles(data); // Assuming authorities is an array of role names
             } else {
                 console.error("Failed to fetch user roles");
             }
@@ -97,7 +99,8 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
                 setSelectedStatus(projectData.type || "New"); 
                 setOneDrivefolder(projectData.oneDriveFolder || ""); // Set initial oneDriveFolder
                 // Decode the group number to set assigned roles
-                setAssignedRoles(getRolesFromGroupNumber(projectData.group || 0)); // Assuming groupNumber is part of projectData
+                // setAssignedRoles(getRolesFromGroupNumber(projectData.group || 0)); // Assuming groupNumber is part of projectData
+                setAssignedRoles(Object.keys(ROLES));
 
                 // Check if projectName is defined before fetching OneDrive data
                 if (projectData.oneDriveFolder) {
@@ -307,17 +310,23 @@ const ProjectDetails = ({ projectId, onClose, accessOToken, token }) => {
                             <h3>Manage Roles:</h3>
                             <div className="roles-container">
                                 <div className="available-roles">
-                                    <h4>Available Roles:</h4>
-                                    {userRoles.filter(role => !assignedRoles.includes(role)).map(role => ( // Filter out assigned roles
-                                        <div key={role} className="role-item">
-                                            <span className="role-name">{role}</span>
-                                            <button onClick={() => addRole(role)} className="add-role-button">+</button>
-                                        </div>
+                                    <h4>Assigned Roles:</h4>
+                                    {/*{userRoles.filter(role => !assignedRoles.includes(role)).map(role => ( // Filter out assigned roles*/}
+                                    {/*    <div key={role} className="role-item">*/}
+                                    {/*        <span className="role-name">{role}</span>*/}
+                                    {/*        <button onClick={() => addRole(role)} className="add-role-button">+</button>*/}
+                                    {/*    </div>*/}
+                                    {/*))}*/}
+                                    {userRoles.map(role => (
+                                       <div key={role} className="role-item">
+                                           <span className="role-name">{role}</span>
+                                           <button onClick={() => addRole(role)} className="add-role-button">+</button>
+                                       </div>
                                     ))}
                                 </div>
 
                                 <div className="assigned-roles">
-                                    <h4>Assigned Roles:</h4>
+                                    <h4>Available Roles:</h4>
                                     {assignedRoles.map(role => (
                                         <div key={role} className="role-item assigned-role-item">
                                             <span className="role-name">{role}</span>

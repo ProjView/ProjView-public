@@ -32,7 +32,8 @@ const Login = ({ onLogin }) => {
             const response = await fetch(`${BASE_URL}/api/login/isTokenValid`, {
                 method: "GET",
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("token")}`,
                 },
             });
 
@@ -58,7 +59,7 @@ const Login = ({ onLogin }) => {
                 const loginData = await loginResponse.json();
                 const token = loginData.token;
 
-                const expirationTime = new Date().getTime() + 60 * 60 * 1000; 
+                const expirationTime = new Date().getTime() + 60 * 60 * 1000;
                 localStorage.setItem("token", token);
                 localStorage.setItem("tokenExpiration", expirationTime);
                 localStorage.setItem("userName", username); // Store the username
