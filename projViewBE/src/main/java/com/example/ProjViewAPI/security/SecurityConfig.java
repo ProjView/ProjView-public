@@ -58,7 +58,6 @@ public class SecurityConfig {
                                         "/api/user/register",
                                         "api/login/refresh"
                                 ).permitAll()
-//                        .requestMatchers("/ambulance/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
                 .anonymous().disable()
@@ -82,11 +81,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // Set your frontend's origin
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "https://projview.azurewebsites.net", "http://localhost:80", "http://localhost:8080")); // Set your frontend's origin
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true); // If you want to allow cookies
-        configuration.setExposedHeaders(Arrays.asList("Authorization")); // To expose Authorization header if needed
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

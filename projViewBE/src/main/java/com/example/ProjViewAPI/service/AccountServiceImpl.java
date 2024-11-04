@@ -6,7 +6,6 @@ import com.example.ProjViewAPI.entity.User;
 import com.example.ProjViewAPI.entity.UserAccount;
 import com.example.ProjViewAPI.enumeration.Role;
 import com.example.ProjViewAPI.exception.LoginException;
-import com.example.ProjViewAPI.exception.ProjectException;
 import com.example.ProjViewAPI.exception.RegisterException;
 import com.example.ProjViewAPI.repository.AdminRepository;
 import com.example.ProjViewAPI.repository.UserRepository;
@@ -19,11 +18,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import com.example.ProjViewAPI.enumeration.Role; // Import the Role class
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set; // Import Set
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -36,8 +34,6 @@ public class AccountServiceImpl implements AccountService {
     private final AdminRepository adminRepository;
 
     private final UserRepository userRepository;
-
-    private final ProjectService projectService;
 
     private final JwtUserDetailsService jwtUserDetailsService;
 
@@ -100,7 +96,7 @@ public class AccountServiceImpl implements AccountService {
 
     public void removeAuthorityFromUser(String username, Role authority) {
         User user = userRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         // Remove the authority from the user
         user.getAuthorities().remove(authority);
@@ -120,7 +116,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public ResponseEntity<JwtResponseModel> refreshAccessToken(String refreshToken){
+    public ResponseEntity<JwtResponseModel> refreshAccessToken(String refreshToken) {
         String username = this.tokenManager.getUsernameFromToken(refreshToken);
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isEmpty()) {

@@ -1,6 +1,5 @@
 package com.example.ProjViewAPI.entity;
 
-import com.example.ProjViewAPI.POJO.UserRegisterRequest;
 import com.example.ProjViewAPI.enumeration.Role;
 import com.example.ProjViewAPI.security.JwtRequestModel;
 import jakarta.persistence.Entity;
@@ -27,6 +26,7 @@ public class User extends UserAccount {
     public User() {
         super();
     }
+
     public void setAuthorities(Set<Role> authorities) {
         this.authorities = authorities;
     }

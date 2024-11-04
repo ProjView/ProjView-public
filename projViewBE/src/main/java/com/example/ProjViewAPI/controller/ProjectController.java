@@ -2,7 +2,6 @@ package com.example.ProjViewAPI.controller;
 
 import com.example.ProjViewAPI.POJO.ProjectCreateRequest;
 import com.example.ProjViewAPI.POJO.ProjectDto;
-import com.example.ProjViewAPI.entity.Project;
 import com.example.ProjViewAPI.enumeration.ProjectRole;
 import com.example.ProjViewAPI.service.ProjectService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

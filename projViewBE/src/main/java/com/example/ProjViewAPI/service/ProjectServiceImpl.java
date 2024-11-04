@@ -73,14 +73,6 @@ public class ProjectServiceImpl implements ProjectService {
         projectRepository.deleteById(id);
     }
 
-//    @Override
-//    public List<ProjectDto> addProjects(List<Project> projects) {
-//        for (Project project : projects) {
-//            addProject(project); // Assuming addProject handles the individual project addition
-//        }
-//        return ProjectMapper.projectListToDTO(projects); // Return the list of added projects
-//    }
-
     @Override
     public ProjectDto getProjectById(Long id) {
         Optional<Project> projectOptional = projectRepository.findById(id);
@@ -99,9 +91,7 @@ public class ProjectServiceImpl implements ProjectService {
         existingProject.setUrl(updatedProject.getUrl());
         existingProject.setDescription(updatedProject.getDescription());
         existingProject.setOneDriveFolder(updatedProject.getOneDriveFolder());
-//        existingProject.setGroup(updatedProject.getGroup());
 
-        // Update other fields as necessary
         return ProjectMapper.projectEntityToDto(projectRepository.save(existingProject));
     }
 
