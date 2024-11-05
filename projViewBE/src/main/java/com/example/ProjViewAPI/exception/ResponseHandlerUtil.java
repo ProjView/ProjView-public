@@ -6,6 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @ControllerAdvice
@@ -24,7 +25,7 @@ public class ResponseHandlerUtil {
     }
 
     @ExceptionHandler(RegisterException.class)
-    public ResponseEntity<String> handleException(RegisterException exception) {
-        return ResponseEntity.status(exception.getStatus()).body(exception.getMessage());
+    public ResponseEntity<Map<String, String>> handleException(RegisterException exception) {
+        return ResponseEntity.status(exception.getStatus()).body(Map.of("message", exception.getMessage()));
     }
 }

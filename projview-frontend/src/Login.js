@@ -58,9 +58,10 @@ const Login = ({ onLogin, setIsLogin }) => {
             if (loginResponse.ok) {
                 const loginData = await loginResponse.json();
                 const token = loginData.token;
-
+                const refreshToken = loginData.refreshToken;
                 const expirationTime = new Date().getTime() + 60 * 60 * 1000;
                 localStorage.setItem("token", token);
+                localStorage.setItem("refreshToken", refreshToken);
                 localStorage.setItem("tokenExpiration", expirationTime);
                 localStorage.setItem("userName", username); // Store the username
 
