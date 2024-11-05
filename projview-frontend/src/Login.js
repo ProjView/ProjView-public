@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import './Login.css';
 import { BASE_URL } from "./authConfig";
 
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, setIsLogin }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
@@ -98,6 +98,9 @@ const Login = ({ onLogin }) => {
                     {error && <p className="error-message">{error}</p>}
                     <button type="submit">Login</button>
                 </form>
+                <p onClick={() => setIsLogin(false)}>
+                    Don't have an account? <span className="login-link">Register here.</span>
+                </p> 
             </div>
         </div>
     );

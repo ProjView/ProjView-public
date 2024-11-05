@@ -1,0 +1,105 @@
+/* Register.css */
+.RegisterModal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999; 
+}
+
+.RegisterModal-content {
+    background-color: #f9f9f9;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    max-width: 500px; 
+    width: 90%;
+    text-align: center; 
+    overflow-y: auto; 
+    max-height: 90%; 
+}
+
+.RegisterModal-content h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.RegisterModal-content form {
+    display: flex;
+    flex-direction: column;
+}
+
+.RegisterModal-content label {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.RegisterModal-content input {
+    padding: 10px; 
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.RegisterModal-content button {
+    padding: 10px 20px;
+    background-color: #28a745; /* Green button for Register */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px; 
+    margin-bottom: 10px; 
+}
+
+
+.RegisterModal-content button:hover {
+    background-color: #218838; 
+}
+
+/* Error and success messages */
+.RegisterModal-content .error-message {
+    color: #d9534f; 
+    font-size: 14px;
+    margin-top: 10px; 
+}
+
+.RegisterModal-content .success-message {
+    color: #28a745; 
+    font-size: 14px;
+    margin-top: 10px; 
+}
+
+
+.login-link {
+    text-decoration: underline;
+    color: #007bff; 
+    cursor: pointer; 
+}
+
+.login-link:hover {
+    color: #0056b3; 
+}
+
+/* Style for loading spinner */
+.spinner {
+    margin: 20px auto;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff; /* Keep the blue color for the spinner */
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+}
+
+/* Keyframes for spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
