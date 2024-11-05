@@ -7,6 +7,7 @@ import ProjectDetails from "./ProjectDetails";
 import Header from './Header'; 
 import AddProjectModal from "./AddProjectModal"; 
 import Login from './Login';
+import Register from './Register';
 import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
 import { authConfig, BASE_URL } from "./authConfig"; // Import the named exports
 
@@ -17,6 +18,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState(""); // State for search term
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const [accessToken, setAccessToken] = useState(null); // State for access token
+  const [isLogin, setIsLogin] = useState(true); // Toggle between Login and Register
   const [isLoggedIn, setIsLoggedIn] = useState(false); // State to track login status
   const [userName, setUserName] = useState(""); // State to hold user's name
   const [oneDriveUserName, setOneDriveUserName] = useState(""); // State to hold user's name
@@ -359,7 +361,11 @@ function App() {
         </>
         ) : (
             // Render the login page if the user is not logged in
-            <Login onLogin={handleLogin} />
+            isLogin ? (
+              <Login onLogin={handleLogin} setIsLogin={setIsLogin} />
+            ) : (
+              <Register setIsLogin={setIsLogin} />
+            )
         )}
     </div>
   );
