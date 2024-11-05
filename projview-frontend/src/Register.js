@@ -36,7 +36,7 @@ const Register = ({ setIsLogin }) => {
         setTimeout(() => setIsLogin(true), 2000); // Redirect to login after success
       } else {
         console.log("Registration error:", data);
-        setError("Registration failed. Please try again.");
+        setError("Registration failed: " + data.message);
       }
     } catch (error) {
       setError("An error occurred during registration. Please try again.");

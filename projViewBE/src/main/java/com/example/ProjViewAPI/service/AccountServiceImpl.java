@@ -8,6 +8,7 @@ import com.example.ProjViewAPI.enumeration.Role;
 import com.example.ProjViewAPI.exception.LoginException;
 import com.example.ProjViewAPI.exception.RegisterException;
 import com.example.ProjViewAPI.repository.AdminRepository;
+import com.example.ProjViewAPI.repository.UserAccountRepository;
 import com.example.ProjViewAPI.repository.UserRepository;
 import com.example.ProjViewAPI.security.JwtRequestModel;
 import com.example.ProjViewAPI.security.JwtResponseModel;
@@ -35,11 +36,17 @@ public class AccountServiceImpl implements AccountService {
 
     private final UserRepository userRepository;
 
+    private final UserAccountRepository userAccountRepository;
+
     private final JwtUserDetailsService jwtUserDetailsService;
 
     @Override
     public ResponseEntity<JwtResponseModel> registerUser(JwtRequestModel jwtRequestModel) {
-        if (userRepository.findByUsername(jwtRequestModel.getUsername()).isPresent()) {
+        try{
+            if (userAccountRepository.findUserByUsername(jwtRequestModel.getUsername()).isPresent()) {
+                throw new RegisterException("Username is already taken", 409);
+            }
+        }catch (ArrayIndexOutOfBoundsException ex){
             throw new RegisterException("Username is already taken", 409);
         }
 
