@@ -1,5 +1,4 @@
 // src/authConfig.js
-
 const authConfig = {
     auth: {
         clientId: process.env.REACT_APP_CLIENT_ID, // Use environment variable

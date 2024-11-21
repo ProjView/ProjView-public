@@ -1,5 +1,5 @@
 {
-  "name": "projview",
+  "name": "projview_test",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -12,9 +12,12 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.7",
-    "dotenv": "^16.4.5",
+    "bootstrap": "^5.3.3",
+    "firebase": "^10.14.1",
     "http-proxy-middleware": "^3.0.3",
+    "projview_test": "file:",
     "react": "^18.3.1",
+    "react-bootstrap": "^2.10.5",
     "react-dom": "^18.3.1",
     "react-router": "^6.27.0",
     "react-router-dom": "^6.27.0",
@@ -44,9 +47,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "eslint": "^8.57.1"
   }
 }

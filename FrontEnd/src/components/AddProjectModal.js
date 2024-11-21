@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './AddProjectModal.css';
-import { BASE_URL } from "./authConfig"; // Import the named exports
+import { BASE_URL } from "../auth/authConfig"; // Import the named exports
+import { Modal, Button, Form, Alert } from "react-bootstrap";
 
 const AddProjectModal = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
@@ -47,68 +48,87 @@ const AddProjectModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-contentAdd">
-        <h2 id="new_proj">Add a New Project</h2>
-        {error && <p className="error-message">{error}</p>}
-        <form onSubmit={handleSubmit}>
-          {/* Form fields here */}
-          <div className="form-group">
-            <label htmlFor="project-name">Project Name*</label>
-            <input
-              id="project-name"
+    <Modal
+      show={isOpen}
+      onHide={onClose}
+      centered
+      dialogClassName="add-modal-width"
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>Add a New Project</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="danger" onClose={() => setError("")} dismissible>
+            {error}
+          </Alert>
+        )}
+
+        {/* Form */}
+        <Form style={{ width: '100%' }} onSubmit={handleSubmit}>
+          {/* Project Name */}
+          <Form.Group className="mb-3" controlId="project-name">
+            <Form.Label>Project Name*</Form.Label>
+            <Form.Control
               type="text"
               placeholder="Enter project name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
             />
-          </div>
+          </Form.Group>
 
-          <div className="form-group">
-            <label htmlFor="project-type">Project Status*</label>
-            <select
-              id="project-status"
+          {/* Project Status */}
+          <Form.Group className="mb-3" controlId="project-status">
+            <Form.Label>Project Status*</Form.Label>
+            <Form.Select
               value={type}
               onChange={(e) => setType(e.target.value)}
+              required
             >
               <option value="New">New</option>
               <option value="Active">Active</option>
               <option value="Hold">Hold</option>
               <option value="End">Ended</option>
-            </select>
-          </div>
+            </Form.Select>
+          </Form.Group>
 
-          <div className="form-group">
-            <label htmlFor="project-lead">Project Lead*</label>
-            <input
-              id="project-lead"
+          {/* Project Lead */}
+          <Form.Group className="mb-3" controlId="project-lead">
+            <Form.Label>Project Lead*</Form.Label>
+            <Form.Control
               type="text"
               placeholder="Enter project lead's name"
               value={lead}
               onChange={(e) => setLead(e.target.value)}
               required
             />
-          </div>
+          </Form.Group>
 
-          <div className="form-group">
-            <label htmlFor="project-url">Project URL (optional)</label>
-            <input
-              id="project-url"
+          {/* Project URL */}
+          <Form.Group className="mb-3" controlId="project-url">
+            <Form.Label>Project URL (optional)</Form.Label>
+            <Form.Control
               type="url"
               placeholder="https://example.com"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
-          </div>
+          </Form.Group>
 
-          <div className="button-group">
-            <button type="submit">Create Project</button>
-            <button type="button" onClick={onClose}>Cancel</button>
+          {/* Buttons */}
+          <div className="d-flex justify-content-end gap-3 mt-4">
+            <Button variant="btn btn-outline-secondary rounded-pill" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button variant="btn btn-primary rounded-pill" type="submit">
+              Create Project
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+        </Form>
+      </Modal.Body>
+    </Modal>
   );
 };
 

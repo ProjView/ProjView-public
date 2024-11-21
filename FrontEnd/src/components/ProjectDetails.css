@@ -1,0 +1,38 @@
+.details-modal-width {
+    max-width: 90%; 
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  max-height: calc(100vh - 150px); 
+}
+
+.left-section {
+  min-width: 400px;
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+
+.comments-section {
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.right-section {
+  max-height: calc(100vh - 210px);
+}
+
+.project-files-container {
+  height: 100%;
+  max-height: 400px;
+  overflow-y: hidden; 
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+}

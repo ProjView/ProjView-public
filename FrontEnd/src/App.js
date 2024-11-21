@@ -1,12 +1,15 @@
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import './App.css';
+import { Container, Row, Col, Card, Button, InputGroup, FormControl, Table, Spinner } from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faFileCirclePlus, faCheck, faXmark, faPen, faPause } from '@fortawesome/free-solid-svg-icons';
-import ProjectDetails from "./ProjectDetails";
-import Header from './Header';
-import AddProjectModal from "./AddProjectModal";
+import { faBriefcase, faCode, faTrash, faFileCirclePlus, faCheck, faXmark, faPen, faQuestionCircle, faPause, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
+import ProjectDetails from "./components/ProjectDetails";
+import Header from './components/Header';
+import AddProjectModal from "./components/AddProjectModal";
 import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
-import { authConfig, BASE_URL } from "./authConfig"; // Import the named exports
+import { authConfig, BASE_URL } from "./auth/authConfig"; // Import the named exports
+import Login from "./auth/Login";
 
 const msalInstance = new PublicClientApplication(authConfig); // Create a new MSAL instance
 
@@ -19,6 +22,7 @@ function App() {
   const [accessToken, setAccessToken] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
+  const navigate = useNavigate();
 
   const [newProjectId, setNewProjectId] = useState(null); // State to track the newly created project
   const projectListRef = useRef(null); // Ref for scrolling to the project list
@@ -29,48 +33,7 @@ function App() {
   const [projectDetailsModalOpen, setProjectDetailsModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
-  // Function to refresh the access token
-  const refreshAccessToken = useCallback(async () => {
-    try {
-      const accounts = msalInstance.getAllAccounts();
-      if (accounts.length > 0) {
-        const tokenResponse = await msalInstance.acquireTokenSilent({
-          scopes: ["Files.ReadWrite", "User.Read"],
-          account: accounts[0],
-        });
-        setAccessToken(tokenResponse.accessToken);
-        localStorage.setItem('accessToken', tokenResponse.accessToken);
-      }
-    } catch (error) {
-      console.error("Token refresh error:", error);
-      // If refreshing the token fails, log the user out
-      logout();
-    }
-  }, []);
-
-  // Function to authenticate user
-  const authenticateOneDrive = useCallback(async () => {
-    try {
-      const response = await msalInstance.loginPopup({
-        scopes: ["Files.ReadWrite", "User.Read"], // Define the scopes you need
-      });
-      const tokenResponse = await msalInstance.acquireTokenSilent({
-        scopes: ["Files.ReadWrite", "User.Read"],
-        account: response.account,
-      });
-      setAccessToken(tokenResponse.accessToken);
-      setIsLoggedIn(true);
-
-      // Store the access token and user name in localStorage
-      localStorage.setItem('accessToken', tokenResponse.accessToken);
-      localStorage.setItem('userName', response.account.name);
-
-      // Fetch user profile information
-      await fetchUserProfile(tokenResponse.accessToken);
-    } catch (error) {
-      console.error("Authentication error:", error);
-    }
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   // Initialize MSAL on component mount
   useEffect(() => {
@@ -96,7 +59,7 @@ function App() {
     };
 
     initializeMSAL(); // Call the initialize function
-  }, [authenticateOneDrive, refreshAccessToken]);
+  }, []);
 
   // Function to sort projects
   const sortProjects = (projects) => {
@@ -106,6 +69,30 @@ function App() {
       if (statusA !== statusB) return statusA - statusB; // Sort by status
       return a.name.localeCompare(b.name); // Sort by name
     });
+  };
+
+  // Function to authenticate user
+  const authenticateOneDrive = async () => {
+    try {
+      const response = await msalInstance.loginPopup({
+        scopes: ["Files.ReadWrite", "User.Read"], // Define the scopes you need
+      });
+      const tokenResponse = await msalInstance.acquireTokenSilent({
+        scopes: ["Files.ReadWrite", "User.Read"],
+        account: response.account,
+      });
+      setAccessToken(tokenResponse.accessToken);
+      setIsLoggedIn(true);
+
+      // Store the access token and user name in localStorage
+      localStorage.setItem('accessToken', tokenResponse.accessToken);
+      localStorage.setItem('userName', response.account.name);
+
+      // Fetch user profile information
+      await fetchUserProfile(tokenResponse.accessToken);
+    } catch (error) {
+      console.error("Authentication error:", error);
+    }
   };
 
   // Function to fetch user profile information
@@ -130,6 +117,25 @@ function App() {
     }
   };
 
+  // Function to refresh the access token
+  const refreshAccessToken = async () => {
+    try {
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        const tokenResponse = await msalInstance.acquireTokenSilent({
+          scopes: ["Files.ReadWrite", "User.Read"],
+          account: accounts[0],
+        });
+        setAccessToken(tokenResponse.accessToken);
+        localStorage.setItem('accessToken', tokenResponse.accessToken);
+      }
+    } catch (error) {
+      console.error("Token refresh error:", error);
+      // If refreshing the token fails, log the user out
+      logout();
+    }
+  };
+
   // Function to log out the user
   const logout = () => {
     setAccessToken(null);
@@ -143,6 +149,8 @@ function App() {
   useEffect(() => {
     const fetchProjects = async () => {
       if (!isLoggedIn) return; // Don't fetch projects if not logged in
+
+      setLoading(true); // Start loading
 
       try {
         const response = await fetch(`${BASE_URL}/api/projects`, {
@@ -161,6 +169,8 @@ function App() {
         }
       } catch (error) {
         console.error(error.message);
+      }finally {
+      setLoading(false); // End loading
       }
     };
     fetchProjects();
@@ -232,7 +242,12 @@ function App() {
     setHighlightActive(true); // Activate the highlight
   
     // Ensure the new status is visible if not already selected
+    console.log("newProjectStatus:", newProjectStatus, typeof newProjectStatus);
+    if (typeof newProjectStatus !== "string") {
+      return; 
+    }
     const statusLower = newProjectStatus.toLowerCase();
+    
     if (!selectedStatuses.includes(statusLower)) {
       setSelectedStatuses(prevStatuses => [...prevStatuses, statusLower]);
     }
@@ -269,138 +284,175 @@ function App() {
   const getHeaderText = () => {
     return `Projects - ${selectedStatuses.map(status => status.charAt(0).toUpperCase() + status.slice(1)).join(", ")}`;
   };
-
+ 
   return (
-    <div className="App" style={{ textAlign: "left" }}>
+     
+    <div>
       {isLoggedIn ? (
         <>
+          {/* Header */}
           <Header onLogin={authenticateOneDrive} onLogout={logout} userName={isLoggedIn ? userName : null} />
-          <div className="aui-page-header">
-            <div className="aui-page-header-inner">
-              <h1>Browse projects</h1>
-            </div>
-          </div>
-          <div className="main-container">
-            {/* Sidebar */}
-            <aside>
-              <div className="filter-section">
-                <h4>Statuses</h4>
-                <ul className="filterUl">
-                  <li className="filterIl">
-                    <a
-                      href=""
-                      onClick={() => toggleStatus("active")}
-                      className={selectedStatuses.includes("active") ? "active" : ""}
-                    >
-                      <FontAwesomeIcon icon={faCheck} /> Active
-                    </a>
-                  </li>
-                  <li className="filterIl">
-                    <a
-                      href=""
-                      onClick={() => toggleStatus("new")}
-                      className={selectedStatuses.includes("new") ? "active" : ""}
-                    >
-                      <FontAwesomeIcon icon={faPen} /> New
-                    </a>
-                  </li>
-                  <li className="filterIl">
-                    <a
-                      href=""
-                      onClick={() => toggleStatus("hold")}
-                      className={selectedStatuses.includes("hold") ? "active" : ""}
-                    >
-                      <FontAwesomeIcon icon={faPause} /> Hold
-                    </a>
-                  </li>
-                  <li className="filterIl">
-                    <a
-                      href=""
-                      onClick={() => toggleStatus("end")}
-                      className={selectedStatuses.includes("end") ? "active" : ""}
-                    >
-                      <FontAwesomeIcon icon={faXmark} /> End
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </aside>
 
-            {/* Main Content  
-        The positioning style on main content will need revisit if want to work on mobile, this in only temporary */}
-            <main style={{ maxHeight: "calc(100vh - 135px)", overflowY: "hidden" }}>
-              <div className="project-list-header">
-                <h2>{getHeaderText()}</h2>
-                <input
-                  id="search-bar"
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search projects..."
-                />
-              </div>
-              <div style={{ maxHeight: "80%", overflowY: "auto" }} ref={projectListRef}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Project</th>
-                      <th>Status</th>
-                      <th>Project lead</th>
-                      <th>URL</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  {filteredProjects.map((project) => (
-                    <tr
-                      key={project.id}
-                      id={`project-${project.id}`}
-                      style={{
-                        backgroundColor: highlightActive && newProjectId === project.id ? 'lightblue' : 'transparent',
-                        transition: 'background-color 1s ease', // Smooth transition for visibility
-                      }}
-                    >
-                      <td>
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            openProjectDetailsModal(project.id);
-                          }}
-                          style={{ textDecoration: 'underline', cursor: 'pointer' }}
-                        >
-                          {project.name}
-                        </a>
-                      </td>
-                      <td>
-                        {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
-                        {project.type.toLowerCase() === "new" && <FontAwesomeIcon icon={faPen} />}
-                        {project.type.toLowerCase() === "hold" && <FontAwesomeIcon icon={faPause} />}
-                        {project.type.toLowerCase() === "end" && <FontAwesomeIcon icon={faXmark} />}
-                      </td>
-                      <td>{project.lead}</td>
-                      <td>{project.url || 'No URL'}</td>
-                      <td style={{ width: "10px" }}>
-                        <FontAwesomeIcon icon={faTrash} onClick={() => deleteProject(project.id)} style={{ cursor: 'pointer', color: 'red' }} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                </table>
-              </div>
+          {/* Browse Projects Block */}
+          <Container fluid className="my-4">
+            {/* Browse Projects Header */}
+            <Row className="mb-3">
+              <Col>
+                <h2>Browse projects</h2>
+                <hr />
+              </Col>
+            </Row>
 
-              <div style={{ marginTop: "20px" }}>
-                <button onClick={openModal} className="add-project-btn">
-                  <FontAwesomeIcon icon={faFileCirclePlus} style={{ color: 'white' }} />
-                </button>
+            <Row>
+              {/* Left Sidebar (Statuses) */}
+              <Col xs={12} md={3} style={{ maxWidth: "250px" }} className="pe-3">
+                <Card>
+                  <Card.Body>
+                    
+                    <div className="filterWrapper">
+                      <h4>Statuses</h4>
+                      <ul className="filterUl">
+                        <li className="filterIl">
+                          <a
+                            href="#"
+                            onClick={() => toggleStatus("active")}
+                            className={selectedStatuses.includes("active") ? "active" : ""}
+                          >
+                            <FontAwesomeIcon icon={faCheck} /> Active
+                          </a>
+                        </li>
+                        <li className="filterIl">
+                          <a
+                            href="#"
+                            onClick={() => toggleStatus("new")}
+                            className={selectedStatuses.includes("new") ? "active" : ""}
+                          >
+                            <FontAwesomeIcon icon={faPen} /> New
+                          </a>
+                        </li>
+                        <li className="filterIl">
+                          <a
+                            href="#"
+                            onClick={() => toggleStatus("hold")}
+                            className={selectedStatuses.includes("hold") ? "active" : ""}
+                          >
+                            <FontAwesomeIcon icon={faPause} /> Hold
+                          </a>
+                        </li>
+                        <li className="filterIl">
+                          <a
+                            href="#"
+                            onClick={() => toggleStatus("end")}
+                            className={selectedStatuses.includes("end") ? "active" : ""}
+                          >
+                            <FontAwesomeIcon icon={faXmark} /> End
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
 
-                <AddProjectModal
-                  isOpen={isModalOpen}
-                  onClose={(newProjectStatus, newProjectId) => closeModal(newProjectStatus, newProjectId)} // Pass the newProjectId
-                />
-              </div>
-            </main>
-          </div>
+              {/* Main Content (Projects, Filter Input, and Table) */}
+              <Col xs={12} md={10} className="position-relative" style={{ maxWidth: "85%", marginLeft: 0, paddingLeft: 0}}>
+                {/* Header for Filter and Filter Field */}
+                <Row className="align-items-center mb-3">
+                  <Col>
+                    <h3>{getHeaderText()}</h3>
+                  </Col>
+                  <Col md="auto">
+                    <InputGroup>
+                      <FormControl
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Search projects..."
+                        style={{ width: "500px" }}
+                      />
+                    </InputGroup>
+                  </Col>
+                </Row>
 
+                {/* Scrollable Table */}
+                {loading ? (
+                  <div className="d-flex justify-content-center align-items-center" style={{ height: "400px" }}>
+                    <Spinner animation="border" variant="primary" />
+                  </div>
+                ) : (
+                  <div ref={projectListRef} style={{ maxHeight: "400px", maxWidth: "100%", margin: "0 auto", overflowY: "auto", overflowX: "auto", position: "relative"}}>
+                    <Table responsive striped bordered hover className="w-100" style = {{minHeight: "100%", marginBottom: "50px",}}>
+                      <thead>
+                        <tr>
+                          <th>Project</th>
+                          <th>Status</th>
+                          <th>Project Lead</th>
+                          <th>URL</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredProjects.map((project) => (
+                          <tr
+                            key={project.id}
+                            id={`project-${project.id}`}
+                            className={highlightActive && newProjectId === project.id ? 'table-info' : ''}
+                          >
+                            <td>
+                              <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  openProjectDetailsModal(project.id);
+                                }}
+                              >
+                                {project.name}
+                              </a>
+                            </td>
+                            <td>
+                              {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
+                              {project.type.toLowerCase() === "new" && <FontAwesomeIcon icon={faPen} />}
+                              {project.type.toLowerCase() === "hold" && <FontAwesomeIcon icon={faPause} />}
+                              {project.type.toLowerCase() === "end" && <FontAwesomeIcon icon={faXmark} />}
+                            </td>
+                            <td>{project.lead}</td>
+                            <td>{project.url || "No URL"}</td>
+                            <td>
+                              <FontAwesomeIcon
+                                icon={faTrash}
+                                onClick={() => deleteProject(project.id)}
+                                style={{ cursor: "pointer", color: "red"}}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </div>
+                )}
+
+                {/* Floating Add Project Button */}
+                <Button
+                  onClick={openModal}
+                  variant="primary"
+                  className="rounded-pill"
+                  style={{
+                    position: "absolute",
+                    bottom: "10px",
+                    left: "20px", 
+                    zIndex: 1000,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faFileCirclePlus} className="me-2" />
+                  Add Project
+                </Button>
+              </Col>
+            </Row>
+          </Container>
+
+          {/* Add Project Modal */}
+          <AddProjectModal isOpen={isModalOpen} onClose={(newProjectStatus, newProjectId) => closeModal(newProjectStatus, newProjectId)} />
+
+          {/* Project Details Modal */}
           {projectDetailsModalOpen && (
             <ProjectDetails
               projectId={currentProjectId}
@@ -411,7 +463,8 @@ function App() {
         </>
       ) : (
         // If not logged in, do not render anything (login prompt will be handled in useEffect)
-        null
+        //null
+        <Login onLogin={authenticateOneDrive} />
       )}
     </div>
   );

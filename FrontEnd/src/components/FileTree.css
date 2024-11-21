@@ -1,0 +1,30 @@
+.scrollable-tree {
+    height:280px;
+    max-height: 280px; 
+    overflow-y: auto; 
+    padding-right: 5px; 
+}
+
+.row {
+    flex-wrap: nowrap;
+}
+
+button, .dropdown-toggle {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.breadcrumb {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0;
+    margin: 0;
+}
+
+.breadcrumb-item {
+    cursor: pointer;
+    white-space: nowrap;
+}
