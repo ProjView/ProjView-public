@@ -50,4 +50,7 @@ thead th {
   background-color: gray;
   color: white;
 }
-  
+
+body, html {
+  overflow: hidden;
+}

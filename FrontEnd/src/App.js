@@ -363,6 +363,14 @@ function App() {
                   </Col>
                   <Col md="auto">
                     <InputGroup>
+                      <Button
+                        onClick={openModal}
+                        variant="primary"
+                        className="rounded-pill me-2"
+                      >
+                        <FontAwesomeIcon icon={faFileCirclePlus} className="me-2" />
+                        Add Project
+                      </Button>
                       <FormControl
                         type="text"
                         value={searchTerm}
@@ -380,8 +388,8 @@ function App() {
                     <Spinner animation="border" variant="primary" />
                   </div>
                 ) : (
-                  <div ref={projectListRef} style={{ maxHeight: "400px", maxWidth: "100%", margin: "0 auto", overflowY: "auto", overflowX: "auto", position: "relative"}}>
-                    <Table responsive striped bordered hover className="w-100" style = {{minHeight: "100%", marginBottom: "50px",}}>
+                  <div ref={projectListRef} style={{ maxHeight: "600px", maxWidth: "100%", margin: "0 auto", overflowY: "auto", overflowX: "auto", position: "relative", marginBottom: "20px" }}>
+                    <Table responsive striped bordered hover className="w-100" style = {{minHeight: "100%"}}>
                       <thead>
                         <tr>
                           <th>Project</th>
@@ -429,22 +437,6 @@ function App() {
                     </Table>
                   </div>
                 )}
-
-                {/* Floating Add Project Button */}
-                <Button
-                  onClick={openModal}
-                  variant="primary"
-                  className="rounded-pill"
-                  style={{
-                    position: "absolute",
-                    bottom: "10px",
-                    left: "20px", 
-                    zIndex: 1000,
-                  }}
-                >
-                  <FontAwesomeIcon icon={faFileCirclePlus} className="me-2" />
-                  Add Project
-                </Button>
               </Col>
             </Row>
           </Container>
