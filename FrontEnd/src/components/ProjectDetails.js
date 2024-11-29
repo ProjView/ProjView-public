@@ -4,7 +4,6 @@ import './ProjectDetails.css'; // Import the CSS for styling
 import { BASE_URL } from "../auth/authConfig"; // Import the named exports
 import { Modal, Button, Row, Col, Form, Spinner } from 'react-bootstrap';
 
-
 const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     const [project, setProject] = useState(null); // State to hold project details
     const [username, setUsername] = useState(""); // State for username
@@ -67,7 +66,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
         }
     };
 
-    const updateProject = async (updatedData) => {
+    const updateProject = async (updatedData, closeModal = true) => {
         try {
             console.log("Updating project with data:", updatedData);
             const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
@@ -81,7 +80,9 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
             if (response.ok) {
                 const updatedProject = await response.json();
                 setProject(updatedProject);
-                onClose(updatedProject.type, updatedProject.id); // Call onClose to refresh the project list and close the modal
+                if (closeModal) {
+                    onClose(updatedProject.type, updatedProject.id); // Call onClose to refresh the project list and close the modal
+                }
             } else {
                 console.error("Failed to update project");
             }
@@ -95,16 +96,19 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
         e.preventDefault();
         try {
             if (username.trim() && comment.trim()) {
-                // Assuming the comments are part of the project data and you have an endpoint to update it.
-                const updatedComments = [...(project.comments || []), { username, comment }];
+                const newComment = { username, comment };
+                const updatedComments = [...(project.comments || []), newComment];
                 const updatedData = {
                     ...project,
                     comments: updatedComments
                 };
-                updateProject(updatedData);
+                await updateProject(updatedData, false); // Pass false to prevent modal from closing
                 setComment("");
                 setUsername("");
-                
+                setProject(prevProject => ({
+                    ...prevProject,
+                    comments: updatedComments
+                }));
             }
         } catch (error) {
             console.error("Error submitting comment:", error);
@@ -118,6 +122,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
             type: selectedStatus,
             description: description,
             oneDriveFolder: oneDriveFolder,
+            comments: project.comments
         };
         updateProject(updatedData);
         setTimeout(() => {

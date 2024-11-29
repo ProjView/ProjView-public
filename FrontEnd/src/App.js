@@ -232,7 +232,7 @@ function App() {
     setIsModalOpen(true);
   };
 
-  const closeModal = async (newProjectStatus, newProjectId) => {
+  const closeModal = async (newProjectStatus, newProjectId, shouldClose = true) => {
     setIsModalOpen(false);
     setProjectDetailsModalOpen(false);
     await refreshProjects();
@@ -242,7 +242,6 @@ function App() {
     setHighlightActive(true); // Activate the highlight
   
     // Ensure the new status is visible if not already selected
-    console.log("newProjectStatus:", newProjectStatus, typeof newProjectStatus);
     if (typeof newProjectStatus !== "string") {
       return; 
     }
@@ -251,7 +250,13 @@ function App() {
     if (!selectedStatuses.includes(statusLower)) {
       setSelectedStatuses(prevStatuses => [...prevStatuses, statusLower]);
     }
-  };  
+
+    if (shouldClose) {
+        setTimeout(() => {
+            document.body.classList.remove("modal-open");
+        }, 250); 
+    }
+  };
 
   useEffect(() => {
     if (newProjectId) {
