@@ -388,7 +388,7 @@ function App() {
                     <Spinner animation="border" variant="primary" />
                   </div>
                 ) : (
-                  <div ref={projectListRef} style={{ maxHeight: "600px", maxWidth: "100%", margin: "0 auto", overflowY: "auto", overflowX: "auto", position: "relative", marginBottom: "20px" }}>
+                  <div ref={projectListRef} className="project-table-container" style={{ maxWidth: "100%", margin: "0 auto", overflowY: "auto", overflowX: "auto", position: "relative", marginBottom: "20px" }}>
                     <Table responsive striped bordered hover className="w-100" style = {{minHeight: "100%"}}>
                       <thead>
                         <tr>
