@@ -473,7 +473,7 @@ function App() {
                               </a>
                               {project.description && (
                                 <span className="project-description">
-                                  {truncateDescription(project.description, 50)} {/* Limit to 100 characters */}
+                                  {truncateDescription(project.description, 200)} {/* Limit to 100 characters */}
                                 </span>
                               )}
                             </td>

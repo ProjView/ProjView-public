@@ -41,7 +41,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
         };
 
         fetchProjectDetails();
-        fetchSharedFolders(); // Fetch shared folders when the component mounts
+        fetchSharedItems(); // Fetch shared items when the component mounts
     }, [projectId, accessToken]);
 
     const fetchOneDriveData = async (oneDriveFolder) => {
@@ -69,11 +69,12 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
         }
     };
 
-    const fetchSharedFolders = async () => {
+    const fetchSharedItems = async () => {
         if (!accessToken) return; // Ensure access token is available
     
         try {
-            const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe`, {
+            // Fetch items shared with you
+            const sharedWithMeResponse = await fetch(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -81,19 +82,60 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
                 },
             });
     
-            if (response.ok) {
-                const data = await response.json();
-                // Filter to include only folders
-                const folders = data.value.filter(item => item.folder);
-                setSharedFolders(folders); // Set the shared folders data
-            } else {
-                throw new Error("Failed to fetch shared folders");
+            const sharedWithMeData = sharedWithMeResponse.ok ? await sharedWithMeResponse.json() : { value: [] };
+    
+            // Filter to include only folders that are shared with you
+            const sharedFolders = sharedWithMeData.value.filter(item => item.folder);
+    
+            // Now fetch your own files and folders
+            const myDriveResponse = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root/children`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+            });
+    
+            const myDriveData = myDriveResponse.ok ? await myDriveResponse.json() : { value: [] };
+    
+            // Check if the folder /ACE/ exists among your own folders
+            const aceFolder = myDriveData.value.find(folder => folder.name === "ACE" && folder.folder);
+    
+            // Fetch subfolders for ACE if it exists
+            let aceSubfolders = [];
+            if (aceFolder) {
+                const aceSubfolderResponse = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${aceFolder.id}/children`, {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                });
+    
+                const aceSubfoldersData = aceSubfolderResponse.ok ? await aceSubfolderResponse.json() : { value: [] };
+                aceSubfolders = aceSubfoldersData.value.filter(item => item.folder); // Only keep subfolders
             }
+    
+            // Prepare final structure with shared folders and their subfolders
+            const foldersWithSubfolders = sharedFolders.map(folder => ({
+                ...folder,
+                subfolders: [] // No subfolders for shared folders
+            }));
+    
+            // If the ACE folder was found, add it to the list with its subfolders
+            if (aceFolder) {
+                foldersWithSubfolders.push({
+                    ...aceFolder,
+                    subfolders: aceSubfolders // Include subfolders for ACE
+                });
+            }
+    
+            setSharedFolders(foldersWithSubfolders); // Set the shared folders data
         } catch (error) {
             console.error("Error fetching shared folders:", error);
         }
-    };   
-
+    };    
+       
     const updateProject = async (updatedData, closeModal) => {
         try {
             console.log("Updating project with data:", updatedData);
@@ -370,6 +412,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
                                         oneDriveFolder={oneDriveFolder}
                                         changeFolder={changeFolder}
                                         updateFolder={updateFolder}
+                                        setShowFolderModal={setShowFolderModal} // Pass the function as a prop
                                     />
                                 ) : (
                                     <div>
@@ -396,18 +439,22 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
                     <Modal.Title>Select OneDrive Folder</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Form.Group>
-                        <Form.Label>Select a folder from your OneDrive:</Form.Label>
-                        <Form.Select onChange={(e) => handleFolderSelect(e.target.value)}>
-                            <option value="">Select a folder</option>
-                            {sharedFolders.map((folder) => (
-                                <option key={folder.id} value={folder.name}>
-                                    {folder.name}
-                                </option>
-                            ))}
-                        </Form.Select>
-                    </Form.Group>
-                </Modal.Body>
+                <Form.Group>
+                    <Form.Label>Select a folder from your OneDrive:</Form.Label>
+                    <Form.Select onChange={(e) => handleFolderSelect(e.target.value)}>
+                        <option value="">Select a folder</option>
+                        {sharedFolders.map(folder => (
+                            <optgroup label={folder.name} key={folder.id}>
+                                {folder.subfolders.map(subfolder => (
+                                    <option key={subfolder.id} value={`${folder.name}/${subfolder.name}`}>
+                                        {subfolder.name}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </Form.Select>
+                </Form.Group>
+            </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowFolderModal(false)}>
                         Close

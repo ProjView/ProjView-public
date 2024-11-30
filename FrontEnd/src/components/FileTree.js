@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Button, Dropdown, Breadcrumb, ListGroup} from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import { Button, Dropdown, Breadcrumb, ListGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFolder, faPlus , faFile, faFilePdf, faFileWord, faFileExcel, faFileImage, faFileAlt, faEllipsisH } from '@fortawesome/free-solid-svg-icons';
+import { faFolder, faPlus, faFile, faFilePdf, faFileWord, faFileExcel, faFileImage, faFileAlt, faEllipsisH } from '@fortawesome/free-solid-svg-icons';
 import './FileTree.css';
 
-const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
+const FileTree = ({ accessToken, oneDriveFolder, changeFolder, setShowFolderModal }) => {
     const [data, setData] = useState([]);
     const [openFolders, setOpenFolders] = useState({});
     const [currentPath, setCurrentPath] = useState([oneDriveFolder]);
@@ -86,7 +86,6 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
         }
     };
 
-
     const handleRename = async (node) => {
         const newName = prompt("Enter new name:", node.name);
         if (newName) {
@@ -163,23 +162,19 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
     };
 
     const changeHomeFolder = async () => {
-        const newFolderName = prompt("Enter the new OneDrive folder name:");
-        if (newFolderName) {
-            await changeFolder(newFolderName);
-            setCurrentPath([newFolderName]);
-            fetchFolderContents(newFolderName);
-        }
+        // Instead of using a prompt, we will use the modal to select folders
+        setShowFolderModal(true); // Show the folder selection modal
     };
 
     const getFileIcon = (filename) => {
         const extension = filename.split('.').pop().toLowerCase();
         switch (extension) {
             case 'pdf':
-                return <FontAwesomeIcon icon={faFilePdf}  style={{ color: '#dc3545'}} />;
+                return <FontAwesomeIcon icon={faFilePdf} style={{ color: '#dc3545' }} />;
             case 'docx':
-                return <FontAwesomeIcon icon={faFileWord}  style={{ color: '#007bff'}}/>;
+                return <FontAwesomeIcon icon={faFileWord} style={{ color: '#007bff' }} />;
             case 'xlsx':
-                return <FontAwesomeIcon icon={faFileExcel}  style={{ color: '#28a745'}}/>;
+                return <FontAwesomeIcon icon={faFileExcel} style={{ color: '#28a745' }} />;
             case 'jpg':
             case 'jpeg':
             case 'png':
@@ -187,16 +182,16 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
                 return <FontAwesomeIcon icon={faFileImage} />;
             case 'txt':
             case 'md':
-                return <FontAwesomeIcon icon={faFileAlt} style={{ color: '#6c757d'}}/>;
+                return <FontAwesomeIcon icon={faFileAlt} style={{ color: '#6c757d' }} />;
             default:
-                return <FontAwesomeIcon icon={faFile}/>;
+                return <FontAwesomeIcon icon={faFile} />;
         }
     };
 
     const renderAddNewDropdown = () => (
         <Dropdown>
             <Dropdown.Toggle variant="success" className="rounded-pill" id="dropdown-add-new" style={{ boxShadow: "none" }}>
-                <FontAwesomeIcon icon={faPlus} className="me-2"/> Add New
+                <FontAwesomeIcon icon={faPlus} className="me-2" /> Add New
             </Dropdown.Toggle>
             <Dropdown.Menu>
                 <Dropdown.Item onClick={handleCreateFolder}>Create Folder</Dropdown.Item>
@@ -211,13 +206,14 @@ const FileTree = ({ accessToken, oneDriveFolder, changeFolder }) => {
                 {nodes.map((node) => {
                     const isFolder = node.folder !== undefined;
                     const isOpen = openFolders[node.id];
-                    const folderIcon = <FontAwesomeIcon icon={faFolder}  style={{ color: '#ffc107', filter: 'drop-shadow(2px 2px 5px rgba(0, 0, 0, 0.3))'}} />;
-                    const fileIcon = node.file ? getFileIcon(node.name) : folderIcon;//'📁';
+                    const folderIcon = <FontAwesomeIcon icon={faFolder} style={{ color: '#ffc107', filter: 'drop-shadow(2px 2px 5px rgba(0, 0, 0, 0.3))' }} />;
+                    const fileIcon = node.file ? getFileIcon(node.name) : folderIcon;
+
                     return (
                         <ListGroup.Item key={node.id} className="d-flex justify-content-between align-items-center cursor-pointer">
-                        <div className="d-flex align-items-center cursor-pointer" onClick={() => isFolder && toggleFolder(node)}>
-                            {fileIcon} <span className="ms-2">{node.name}</span>
-                        </div>
+                            <div className="d-flex align-items-center cursor-pointer" onClick={() => isFolder && toggleFolder(node)}>
+                                {fileIcon} <span className="ms-2">{node.name}</span>
+                            </div>
                             <Dropdown align="end">
                                 <Dropdown.Toggle
                                     variant="link"
