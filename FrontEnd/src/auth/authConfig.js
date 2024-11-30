@@ -13,8 +13,8 @@ const authConfig = {
 
 const authConfigTuke = {
     auth: {
-        clientId: REACT_APP_CLIENT_ID_TUKE, // Use environment variable
-        authority: REACT_APP_AUTHORITY_TUKE, // Use environment variable
+        clientId: rocess.env.REACT_APP_CLIENT_ID_TUKE, // Use environment variable
+        authority: rocess.env.REACT_APP_AUTHORITY_TUKE, // Use environment variable
         redirectUri: process.env.REACT_APP_REDIRECT_URI, // Use environment variable
     },
     cache: {
