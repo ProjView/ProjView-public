@@ -38,6 +38,8 @@ jobs:
         env:  # Pass the secrets as environment variables
           REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
           REACT_APP_AUTHORITY: ${{ secrets.REACT_APP_AUTHORITY }}
+          REACT_APP_CLIENT_ID_TUKE: ${{ secrets.REACT_APP_CLIENT_ID_TUKE }}
+          REACT_APP_AUTHORITY_TUKE: ${{ secrets.REACT_APP_AUTHORITY_TUKE }}
           REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
           REACT_APP_BASE_URL: ${{ secrets.REACT_APP_BASE_URL }}
           CI: false  # Temporarily set CI to false to bypass warnings as errors
