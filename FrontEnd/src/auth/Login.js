@@ -3,12 +3,22 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSignInAlt } from '@fortawesome/free-solid-svg-icons';
 import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 
+
 const Login = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [tukeLogin, setTukeLogin] = useState(false);
 
   const handleLoginClick = async () => {
+    setTukeLogin(false);
     setIsLoading(true); 
-    await onLogin(); 
+    await onLogin(tukeLogin); 
+    setIsLoading(false); 
+  };
+
+  const handleLoginClickTUKE = async () => {
+    setTukeLogin(true);
+    setIsLoading(true); 
+    await onLogin(tukeLogin); 
     setIsLoading(false); 
   };
 
@@ -32,7 +42,18 @@ const Login = ({ onLogin }) => {
                   disabled={isLoading}
                 >
                   <FontAwesomeIcon icon={faSignInAlt} className="me-2" />
-                  {isLoading ? "Signing In..." : "Sign In with Microsoft"}
+                  {isLoading ? "Signing In..." : "Sign In with Microsoft with NXT"}
+                </Button>
+
+                <Button
+                  variant="primary rounded-pill"
+                  size="md"
+                  className="mt-3 mb-3 d-flex align-items-center justify-content-center mx-auto"
+                  onClick={handleLoginClickTUKE}
+                  disabled={isLoading}
+                >
+                  <FontAwesomeIcon icon={faSignInAlt} className="me-2" />
+                  {isLoading ? "Signing In..." : "Sign In with Microsoft with TUKE"}
                 </Button>
 
                 {isLoading && (

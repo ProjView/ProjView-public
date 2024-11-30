@@ -90,3 +90,14 @@ body, html {
     max-height: 900px;
   }
 }
+
+.project-description {
+  font-size: 0.85em; /* Smaller font size */
+  color: #555; /* Optional: Change color for better visibility */
+  margin-left: 10px; /* Space between project name and description */
+  white-space: normal; /* Allow text to wrap */
+  max-width: 200px; /* Set a maximum width for the description */
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis; /* Show ellipsis for overflow text */
+  display: block; /* Ensure it behaves as a block element */
+}

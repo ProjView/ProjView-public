@@ -1,3 +1,9 @@
+/*!
+	Copyright (c) 2018 Jed Watson.
+	Licensed under the MIT License (MIT), see
+	http://jedwatson.github.io/classnames
+*/
+
 /*! @azure/msal-browser v3.26.1 2024-10-08 */
 
 /*! @azure/msal-common v14.15.0 2024-09-20 */

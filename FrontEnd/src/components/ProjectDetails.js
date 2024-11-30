@@ -13,8 +13,10 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     const [projectName, setProjectName] = useState(""); // State for project name
     const [description, setDescription] = useState(""); // State for project description
     const [folderData, setFolderData] = useState(null); // State to hold folder data
-    const [oneDriveFolder, setOneDrivefolder] = useState(""); // State to hold oneDriveFolder name
+    const [oneDriveFolder, setOneDrivefolder] = useState(""); // State to hold OneDrive folder name
+    const [sharedFolders, setSharedFolders] = useState([]); // State to hold shared folders
     const [isLoadingOneDrive, setIsLoadingOneDrive] = useState(false); // State for loading indicator
+    const [showFolderModal, setShowFolderModal] = useState(false); // State to control folder selection modal
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -39,7 +41,8 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
         };
 
         fetchProjectDetails();
-    }, [projectId]);
+        fetchSharedFolders(); // Fetch shared folders when the component mounts
+    }, [projectId, accessToken]);
 
     const fetchOneDriveData = async (oneDriveFolder) => {
         if (!accessToken) return; // Ensure access token is available
@@ -66,7 +69,32 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
         }
     };
 
-    const updateProject = async (updatedData, closeModal = true) => {
+    const fetchSharedFolders = async () => {
+        if (!accessToken) return; // Ensure access token is available
+    
+        try {
+            const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/sharedWithMe`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json",
+                },
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                // Filter to include only folders
+                const folders = data.value.filter(item => item.folder);
+                setSharedFolders(folders); // Set the shared folders data
+            } else {
+                throw new Error("Failed to fetch shared folders");
+            }
+        } catch (error) {
+            console.error("Error fetching shared folders:", error);
+        }
+    };   
+
+    const updateProject = async (updatedData, closeModal) => {
         try {
             console.log("Updating project with data:", updatedData);
             const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
@@ -91,7 +119,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
         }
         setOneDrivefolder(updatedData.oneDriveFolder);
     };
-
+    
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -116,6 +144,14 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
     };
 
     const closeModal = async() => {
+        onClose(selectedStatus, projectId); // Call onClose to refresh the project list and close the modal
+
+        setTimeout(() => {
+            document.body.classList.remove("modal-open");
+        }, 250); 
+    };
+
+    const saveModal = async() => {
         const updatedData = {
             name: projectName,
             lead: projectLead,
@@ -124,7 +160,7 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
             oneDriveFolder: oneDriveFolder,
             comments: project.comments
         };
-        updateProject(updatedData);
+        updateProject(updatedData, true);
         setTimeout(() => {
             document.body.classList.remove("modal-open");
         }, 250); 
@@ -212,140 +248,173 @@ const ProjectDetails = ({ projectId, onClose, accessToken }) => {
             }
         }
     };
+
+    const handleFolderSelect = (folderName) => {
+        setOneDrivefolder(folderName); // Set the selected folder
+        setShowFolderModal(false); // Close the modal
+        fetchOneDriveData(folderName); // Fetch data for the selected folder
+    };
+
     if (!project) {
         return <div>Loading...</div>;
     }
 
     return (
-        <Modal
-            show
-            onHide={closeModal}
-            dialogClassName="details-modal-width"
-            centered
-            scrollable={false}
-        >
-            <Modal.Header closeButton>
-                <Modal.Title>Project Details</Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="modal-body">
-                <Row style={{ width: "100%" }}>
-                    {/* Left Section: Project Form */}
-                    <Col md={6} className="left-section">
-                        <Form>
-                            <div className="d-flex gap-3 mb-3">
-                                <Form.Group className="flex-fill">
-                                    <Form.Label>Project Name</Form.Label>
+        <>
+            <Modal
+                show
+                onHide={closeModal}
+                dialogClassName="details-modal-width"
+                centered
+                scrollable={false}
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Project Details</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="modal-body">
+                    <Row style={{ width: "100%" }}>
+                        {/* Left Section: Project Form */}
+                        <Col md={6} className="left-section">
+                            <Form>
+                                <div className="d-flex gap-3 mb-3">
+                                    <Form.Group className="flex-fill">
+                                        <Form.Label>Project Name</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={projectName}
+                                            onChange={(e) => setProjectName(e.target.value)}
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="flex-fill">
+                                        <Form.Label>Project Lead</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={projectLead}
+                                            onChange={(e) => setProjectLead(e.target.value)}
+                                        />
+                                    </Form.Group>
+
+                                    <Form.Group className="flex-fill">
+                                        <Form.Label>Status</Form.Label>
+                                        <Form.Select
+                                            value={selectedStatus}
+                                            onChange={(e) => setSelectedStatus(e.target.value)}
+                                        >
+                                            <option value="New">New</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Hold">Hold</option>
+                                            <option value="End">End</option>
+                                        </Form.Select>
+                                    </Form.Group>
+                                </div>
+
+                                {/* Description */}
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Description</Form.Label>
                                     <Form.Control
-                                        type="text"
-                                        value={projectName}
-                                        onChange={(e) => setProjectName(e.target.value)}
+                                        as="textarea"
+                                        rows={4}
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
                                     />
                                 </Form.Group>
 
-                                <Form.Group className="flex-fill">
-                                    <Form.Label>Project Lead</Form.Label>
+                                {/* Comments Section */}
+                                <Form.Group>
+                                    <Form.Label>Comments</Form.Label>
+                                    <div className="comments-section">
+                                        <ul className="list-unstyled">
+                                            {project.comments &&
+                                                project.comments.map((c, index) => (
+                                                    <li key={index}>
+                                                        <strong>{c.username}:</strong> {c.comment}
+                                                    </li>
+                                                ))}
+                                        </ul>
+                                    </div>
                                     <Form.Control
+                                        className="mb-2"
                                         type="text"
-                                        value={projectLead}
-                                        onChange={(e) => setProjectLead(e.target.value)}
+                                        placeholder="Your Name"
+                                        value={username}
+                                        onChange={(e) => setUsername(e.target.value)}
                                     />
-                                </Form.Group>
-
-                                <Form.Group className="flex-fill">
-                                    <Form.Label>Status</Form.Label>
-                                    <Form.Select
-                                        value={selectedStatus}
-                                        onChange={(e) => setSelectedStatus(e.target.value)}
-                                    >
-                                        <option value="New">New</option>
-                                        <option value="Active">Active</option>
-                                        <option value="Hold">Hold</option>
-                                        <option value="End">End</option>
-                                    </Form.Select>
-                                </Form.Group>
-                            </div>
-
-                            {/* Description */}
-                            <Form.Group className="mb-3">
-                                <Form.Label>Description</Form.Label>
-                                <Form.Control
-                                    as="textarea"
-                                    rows={4}
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                />
-                            </Form.Group>
-
-                            {/* Comments Section */}
-                            <Form.Group>
-                                <Form.Label>Comments</Form.Label>
-                                <div className="comments-section">
-                                    <ul className="list-unstyled">
-                                        {project.comments &&
-                                            project.comments.map((c, index) => (
-                                                <li key={index}>
-                                                    <strong>{c.username}:</strong> {c.comment}
-                                                </li>
-                                            ))}
-                                    </ul>
-                                </div>
-                                <Form.Control
-                                    className="mb-2"
-                                    type="text"
-                                    placeholder="Your Name"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                />
-                                <Form.Control
-                                    className="mb-2"
-                                    as="textarea"
-                                    rows={2}
-                                    placeholder="Your Comment"
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                />
-                                <Button variant="primary" className="rounded-pill" onClick={handleCommentSubmit}>
-                                    Submit Comment
-                                </Button>
-                            </Form.Group>
-                        </Form>
-                    </Col>
-
-                    {/* Right Section: OneDrive Folder */}
-                    <Col md={6} className="right-section">
-                        {/* <h4>Project Files</h4> */}
-                        <Form.Label>Project Files</Form.Label>
-                        <div className="project-files-container">
-                            {isLoadingOneDrive ? (
-                                <div className="d-flex justify-content-center">
-                                    <Spinner animation="border" variant="primary" />
-                                </div>
-                            ) : folderData ? (
-                                <FileTree
-                                    data={folderData}
-                                    accessToken={accessToken}
-                                    oneDriveFolder={oneDriveFolder}
-                                    changeFolder={changeFolder}
-                                    updateFolder={updateFolder}
-                                />
-                            ) : (
-                                <div>
-                                    <p>No OneDrive folder specified.</p>
-                                    <Button variant="secondary" className="rounded-pill" onClick={updateFolder}>
-                                        Set OneDrive Folder
+                                    <Form.Control
+                                        className="mb-2"
+                                        as="textarea"
+                                        rows={2}
+                                        placeholder="Your Comment"
+                                        value={comment}
+                                        onChange={(e) => setComment(e.target.value)}
+                                    />
+                                    <Button variant="primary" className="rounded-pill" onClick={handleCommentSubmit}>
+                                        Submit Comment
                                     </Button>
-                                </div>
-                            )}
-                        </div>
-                    </Col>
-                </Row>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" className="rounded-pill" onClick={closeModal}>
-                    Close
-                </Button>
-            </Modal.Footer>
-        </Modal>
+                                </Form.Group>
+                            </Form>
+                        </Col>
+
+                        {/* Right Section: OneDrive Folder */}
+                        <Col md={6} className="right-section">
+                            <Form.Label>Project Files</Form.Label>
+                            <div className="project-files-container">
+                                {isLoadingOneDrive ? (
+                                    <div className="d-flex justify-content-center">
+                                        <Spinner animation="border" variant="primary" />
+                                    </div>
+                                ) : folderData ? (
+                                    <FileTree
+                                        data={folderData}
+                                        accessToken={accessToken}
+                                        oneDriveFolder={oneDriveFolder}
+                                        changeFolder={changeFolder}
+                                        updateFolder={updateFolder}
+                                    />
+                                ) : (
+                                    <div>
+                                        <p>No OneDrive folder specified.</p>
+                                        <Button variant="secondary" className="rounded-pill" onClick={() => setShowFolderModal(true)}>
+                                            Set OneDrive Folder
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </Col>
+                    </Row>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" className="rounded-pill" onClick={saveModal}>
+                        Save
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal for selecting OneDrive folder */}
+            <Modal show={showFolderModal} onHide={() => setShowFolderModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Select OneDrive Folder</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form.Group>
+                        <Form.Label>Select a folder from your OneDrive:</Form.Label>
+                        <Form.Select onChange={(e) => handleFolderSelect(e.target.value)}>
+                            <option value="">Select a folder</option>
+                            {sharedFolders.map((folder) => (
+                                <option key={folder.id} value={folder.name}>
+                                    {folder.name}
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </Form.Group>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowFolderModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </>
     );
 };
 
