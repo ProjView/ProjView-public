@@ -45,7 +45,7 @@ public class ProjectService {
         existingProject.setUrl(updatedProject.getUrl());
         existingProject.setDescription(updatedProject.getDescription());
         existingProject.setOneDriveFolder(updatedProject.getOneDriveFolder());
-        // Update other fields as necessary
+        existingProject.setComments(updatedProject.getComments()); 
         return projectRepository.save(existingProject);
     }
 }

@@ -50,4 +50,54 @@ thead th {
   background-color: gray;
   color: white;
 }
-  
+
+body, html {
+  overflow: hidden;
+}
+
+@media (max-height: 600px) {
+  .project-table-container {
+    max-height: 400px;
+  }
+}
+
+@media (min-height: 601px) and (max-height: 800px) {
+  .project-table-container {
+    max-height: 500px;
+  }
+}
+
+@media (min-height: 801px) and (max-height: 1000px) {
+  .project-table-container {
+    max-height: 600px;
+  }
+}
+
+@media (min-height: 1001px) and (max-height: 1200px) {
+  .project-table-container {
+    max-height: 700px;
+  }
+}
+
+@media (min-height: 1201px) and (max-height: 1400px) {
+  .project-table-container {
+    max-height: 800px;
+  }
+}
+
+@media (min-height: 1401px) {
+  .project-table-container {
+    max-height: 900px;
+  }
+}
+
+.project-description {
+  font-size: 0.85em; /* Smaller font size */
+  color: #555; /* Optional: Change color for better visibility */
+  margin-left: 10px; /* Space between project name and description */
+  white-space: normal; /* Allow text to wrap */
+  max-width: 200px; /* Set a maximum width for the description */
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis; /* Show ellipsis for overflow text */
+  display: block; /* Ensure it behaves as a block element */
+}

@@ -1,7 +1,7 @@
 package com.example.ProjViewAPI;
 
 import jakarta.persistence.*;
-//import java.util.List;
+import java.util.List;
 
 @Entity
 @Table(name = "projectsapi")
@@ -15,12 +15,14 @@ public class Project {
     private String type;
     private String lead;
     private String url;
-    private String OneDriveFolder;
+    private String oneDriveFolder;
 
     @Column(length = 1000) // assuming description can be long
     private String description;
 
-    // Other fields like comments if necessary
+    @ElementCollection
+    @CollectionTable(name = "project_comments", joinColumns = @JoinColumn(name = "project_id"))
+    private List<Comment> comments;
 
     // Getters and Setters
     public Long getId() {
@@ -71,12 +73,41 @@ public class Project {
         this.description = description;
     }
 
-    public String getOneDriveFolder(){
-        return OneDriveFolder;
+    public String getOneDriveFolder() {
+        return oneDriveFolder;
     }
 
-    public void setOneDriveFolder(String oneDriveFolder){
-        this.OneDriveFolder = oneDriveFolder;
+    public void setOneDriveFolder(String oneDriveFolder) {
+        this.oneDriveFolder = oneDriveFolder;
     }
 
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+}
+
+@Embeddable
+class Comment {
+    private String username;
+    private String comment;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
 }

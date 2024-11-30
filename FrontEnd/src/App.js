@@ -8,10 +8,11 @@ import ProjectDetails from "./components/ProjectDetails";
 import Header from './components/Header';
 import AddProjectModal from "./components/AddProjectModal";
 import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
-import { authConfig, BASE_URL } from "./auth/authConfig"; // Import the named exports
+import { authConfig, authConfigTuke, BASE_URL } from "./auth/authConfig"; // Import the named exports
 import Login from "./auth/Login";
 
-const msalInstance = new PublicClientApplication(authConfig); // Create a new MSAL instance
+const msalInstance = new PublicClientApplication(authConfig); // Create a new MSAL instance for NXT
+const msalInstanceTuke = new PublicClientApplication(authConfigTuke); // Create a new MSAL instance for TUKE
 
 const statusOrder = ["new", "active", "hold", "end"]; // Define the status order
 
@@ -23,6 +24,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
+  const [tukeLogin, setTukeLogin] = useState(false);
 
   const [newProjectId, setNewProjectId] = useState(null); // State to track the newly created project
   const projectListRef = useRef(null); // Ref for scrolling to the project list
@@ -40,7 +42,7 @@ function App() {
     const initializeMSAL = async () => {
       try {
         await msalInstance.initialize(); // Initialize MSAL
-        console.log("MSAL Initialized");
+        await msalInstanceTuke.initialize(); // Initialize MSAL
 
         // Check for existing login state
         const storedAccessToken = localStorage.getItem('accessToken');
@@ -51,7 +53,7 @@ function App() {
           await refreshAccessToken(); // Refresh token if it's close to expiring
         } else {
           // If not logged in, prompt for login
-          await authenticateOneDrive();
+          // await authenticateOneDrive();
         }
       } catch (error) {
         console.error("MSAL Initialization error:", error);
@@ -72,26 +74,50 @@ function App() {
   };
 
   // Function to authenticate user
-  const authenticateOneDrive = async () => {
-    try {
-      const response = await msalInstance.loginPopup({
-        scopes: ["Files.ReadWrite", "User.Read"], // Define the scopes you need
-      });
-      const tokenResponse = await msalInstance.acquireTokenSilent({
-        scopes: ["Files.ReadWrite", "User.Read"],
-        account: response.account,
-      });
-      setAccessToken(tokenResponse.accessToken);
-      setIsLoggedIn(true);
+  const authenticateOneDrive = async (tukeLogin) => {
+    setTukeLogin(tukeLogin);
+    if(tukeLogin) {
+      try {
+        const response = await msalInstance.loginPopup({
+          scopes: ["Files.ReadWrite", "User.Read"], // Define the scopes you need
+        });
+        const tokenResponse = await msalInstance.acquireTokenSilent({
+          scopes: ["Files.ReadWrite", "User.Read"],
+          account: response.account,
+        });
+        setAccessToken(tokenResponse.accessToken);
+        setIsLoggedIn(true);
 
-      // Store the access token and user name in localStorage
-      localStorage.setItem('accessToken', tokenResponse.accessToken);
-      localStorage.setItem('userName', response.account.name);
+        // Store the access token and user name in localStorage
+        localStorage.setItem('accessToken', tokenResponse.accessToken);
+        localStorage.setItem('userName', response.account.name);
 
-      // Fetch user profile information
-      await fetchUserProfile(tokenResponse.accessToken);
-    } catch (error) {
-      console.error("Authentication error:", error);
+        // Fetch user profile information
+        await fetchUserProfile(tokenResponse.accessToken);
+      } catch (error) {
+        console.error("Authentication error:", error);
+      }
+    }else{
+      try {
+        const response = await msalInstanceTuke.loginPopup({
+          scopes: ["Files.ReadWrite", "User.Read"], // Define the scopes you need
+        });
+        const tokenResponse = await msalInstanceTuke.acquireTokenSilent({
+          scopes: ["Files.ReadWrite", "User.Read"],
+          account: response.account,
+        });
+        setAccessToken(tokenResponse.accessToken);
+        setIsLoggedIn(true);
+
+        // Store the access token and user name in localStorage
+        localStorage.setItem('accessToken', tokenResponse.accessToken);
+        localStorage.setItem('userName', response.account.name);
+
+        // Fetch user profile information
+        await fetchUserProfile(tokenResponse.accessToken);
+      } catch (error) {
+        console.error("Authentication error:", error);
+      }
     }
   };
 
@@ -119,20 +145,38 @@ function App() {
 
   // Function to refresh the access token
   const refreshAccessToken = async () => {
-    try {
-      const accounts = msalInstance.getAllAccounts();
-      if (accounts.length > 0) {
-        const tokenResponse = await msalInstance.acquireTokenSilent({
-          scopes: ["Files.ReadWrite", "User.Read"],
-          account: accounts[0],
-        });
-        setAccessToken(tokenResponse.accessToken);
-        localStorage.setItem('accessToken', tokenResponse.accessToken);
+    if(tukeLogin){
+      try {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+          const tokenResponse = await msalInstance.acquireTokenSilent({
+            scopes: ["Files.ReadWrite", "User.Read"],
+            account: accounts[0],
+          });
+          setAccessToken(tokenResponse.accessToken);
+          localStorage.setItem('accessToken', tokenResponse.accessToken);
+        }
+      } catch (error) {
+        console.error("Token refresh error:", error);
+        // If refreshing the token fails, log the user out
+        logout();
       }
-    } catch (error) {
-      console.error("Token refresh error:", error);
-      // If refreshing the token fails, log the user out
-      logout();
+    }else{
+      try {
+        const accounts = msalInstanceTuke.getAllAccounts();
+        if (accounts.length > 0) {
+          const tokenResponse = await msalInstanceTuke.acquireTokenSilent({
+            scopes: ["Files.ReadWrite", "User.Read"],
+            account: accounts[0],
+          });
+          setAccessToken(tokenResponse.accessToken);
+          localStorage.setItem('accessToken', tokenResponse.accessToken);
+        }
+      } catch (error) {
+        console.error("Token refresh error:", error);
+        // If refreshing the token fails, log the user out
+        logout();
+      }
     }
   };
 
@@ -232,7 +276,7 @@ function App() {
     setIsModalOpen(true);
   };
 
-  const closeModal = async (newProjectStatus, newProjectId) => {
+  const closeModal = async (newProjectStatus, newProjectId, shouldClose = true) => {
     setIsModalOpen(false);
     setProjectDetailsModalOpen(false);
     await refreshProjects();
@@ -242,7 +286,6 @@ function App() {
     setHighlightActive(true); // Activate the highlight
   
     // Ensure the new status is visible if not already selected
-    console.log("newProjectStatus:", newProjectStatus, typeof newProjectStatus);
     if (typeof newProjectStatus !== "string") {
       return; 
     }
@@ -251,7 +294,13 @@ function App() {
     if (!selectedStatuses.includes(statusLower)) {
       setSelectedStatuses(prevStatuses => [...prevStatuses, statusLower]);
     }
-  };  
+
+    if (shouldClose) {
+        setTimeout(() => {
+            document.body.classList.remove("modal-open");
+        }, 250); 
+    }
+  };
 
   useEffect(() => {
     if (newProjectId) {
@@ -284,6 +333,13 @@ function App() {
   const getHeaderText = () => {
     return `Projects - ${selectedStatuses.map(status => status.charAt(0).toUpperCase() + status.slice(1)).join(", ")}`;
   };
+
+  const truncateDescription = (description, maxLength) => {
+    if (description.length <= maxLength) {
+      return description;
+    }
+    return description.slice(0, maxLength) + '...';
+  };  
  
   return (
      
@@ -363,6 +419,14 @@ function App() {
                   </Col>
                   <Col md="auto">
                     <InputGroup>
+                      <Button
+                        onClick={openModal}
+                        variant="primary"
+                        className="rounded-pill me-2"
+                      >
+                        <FontAwesomeIcon icon={faFileCirclePlus} className="me-2" />
+                        Add Project
+                      </Button>
                       <FormControl
                         type="text"
                         value={searchTerm}
@@ -380,8 +444,8 @@ function App() {
                     <Spinner animation="border" variant="primary" />
                   </div>
                 ) : (
-                  <div ref={projectListRef} style={{ maxHeight: "400px", maxWidth: "100%", margin: "0 auto", overflowY: "auto", overflowX: "auto", position: "relative"}}>
-                    <Table responsive striped bordered hover className="w-100" style = {{minHeight: "100%", marginBottom: "50px",}}>
+                  <div ref={projectListRef} className="project-table-container" style={{ maxWidth: "100%", margin: "0 auto", overflowY: "auto", overflowX: "auto", position: "relative", marginBottom: "20px" }}>
+                    <Table responsive striped bordered hover className="w-100" style = {{minHeight: "100%"}}>
                       <thead>
                         <tr>
                           <th>Project</th>
@@ -407,6 +471,11 @@ function App() {
                               >
                                 {project.name}
                               </a>
+                              {project.description && (
+                                <span className="project-description">
+                                  {truncateDescription(project.description, 50)} {/* Limit to 100 characters */}
+                                </span>
+                              )}
                             </td>
                             <td>
                               {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
@@ -429,22 +498,6 @@ function App() {
                     </Table>
                   </div>
                 )}
-
-                {/* Floating Add Project Button */}
-                <Button
-                  onClick={openModal}
-                  variant="primary"
-                  className="rounded-pill"
-                  style={{
-                    position: "absolute",
-                    bottom: "10px",
-                    left: "20px", 
-                    zIndex: 1000,
-                  }}
-                >
-                  <FontAwesomeIcon icon={faFileCirclePlus} className="me-2" />
-                  Add Project
-                </Button>
               </Col>
             </Row>
           </Container>
