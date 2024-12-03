@@ -26,7 +26,7 @@ function App() {
   const [accessTokenJira, setAccessTokenJira] = useState(null);
   const [cloudId, setCloudId] = useState(null);
   const [jiraProjects, setJiraProjects] = useState(null);
-  const { fetchJira, fetchCloudId, fetchJiraProjects } = JiraService();
+  const { fetchJira, fetchCloudId, fetchJiraProjects, fetchJiraIssues, filterIssues, addIssuesToProjects } = JiraService();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
@@ -45,6 +45,8 @@ function App() {
 
   //-------JIRA
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     const expiration = localStorage.getItem('accessTokenJiraExpiration')
     if(!localStorage.getItem('accessTokenJira') || Date.now() > expiration){
       fetchJira()
@@ -58,25 +60,32 @@ function App() {
            console.error('Failed to fetch Jira data:', error);
          });
     }
-
-    fetchJiraProjects().then(projects => {
-      console.log(projects)
-      setJiraProjects(projects);
-    }).catch(e => {
-      console.error(e);
-    })
-  },[])
+  },[isLoggedIn])
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     fetchCloudId()
        .then(cloudData => {
          localStorage.setItem('cloudId', cloudData.id);
          setCloudId(cloudData.id);
+
+         fetchJiraProjects().then(projects => {
+           fetchJiraIssues().then(issues => {
+             console.log(addIssuesToProjects(filterIssues(issues), projects));
+             setJiraProjects(addIssuesToProjects(filterIssues(issues), projects));
+           }).catch(e => {
+             console.error(e);
+           })
+         }).catch(e => {
+           console.error(e);
+         })
+
        })
        .catch(error => {
          console.error('Failed to fetch Jira Cloud ID:', error);
        });
-  },[accessTokenJira])
+  },[accessTokenJira, isLoggedIn])
 
   // Initialize MSAL on component mount
   useEffect(() => {
@@ -490,6 +499,7 @@ function App() {
                       <thead>
                         <tr>
                           <th>Project</th>
+                          <th>Issues</th>
                           <th>Status</th>
                           <th>Project Lead</th>
                           <th>URL</th>
@@ -517,6 +527,11 @@ function App() {
                                   {truncateDescription(project.description, 200)} {/* Limit to 100 characters */}
                                 </span>
                               )}
+                            </td>
+                            <td>
+                              {jiraProjects?.filter(proj => proj.id === project.jiraProjectId).length > 0
+                                 ? jiraProjects.find(proj => proj.id === project.jiraProjectId)?.issues?.length || 'NaN'
+                                 : 'NaN'}
                             </td>
                             <td>
                               {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
@@ -552,6 +567,7 @@ function App() {
               projectId={currentProjectId}
               onClose={closeModal}
               accessToken={accessToken}
+              jiraProjects={jiraProjects}
             />
           )}
         </>

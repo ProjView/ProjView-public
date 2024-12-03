@@ -63,6 +63,37 @@ const JiraService = () => {
       }
    };
 
+   const fetchJiraIssues = async () => {
+      const accessTokenJira = localStorage.getItem('accessTokenJira');
+      const cloudId = localStorage.getItem('cloudId');
+      if (!accessTokenJira || !cloudId) {
+         console.error('Could not fetch Jira projects: missing Jira token or CLoud ID');
+      }
+      const expiration = localStorage.getItem('accessTokenJiraExpiration')
+      if (Date.now() > expiration){
+         throw new Error(`token expired`);
+      }
+      const url = `https://api.atlassian.com/ex/jira/${cloudId}/rest/api/3/search`;
+
+      try {
+         const resp = await fetch(url, {
+            method: 'GET',
+            headers: {
+               'Accept': 'application/json',
+               'Authorization': `Bearer ${accessTokenJira}`,
+            },
+         });
+
+         if (!resp.ok) {
+            throw new Error(`HTTP error! Status: ${resp.status}`);
+         }
+
+         return resp.json();
+      } catch (error) {
+         console.error('Error fetching Jira data:', error);
+      }
+   };
+
    const fetchCloudId = async () => {
       const url = 'https://api.atlassian.com/oauth/token/accessible-resources';
       const accessTokenJira = localStorage.getItem('accessTokenJira');
@@ -78,16 +109,15 @@ const JiraService = () => {
                'Content-Type': 'application/json',
             },
          });
-
          if (!resp.ok) {
             throw new Error(`HTTP error! Status: ${resp.status}`);
          }
-
          const jsonResponse = await resp.json();
 
          if (!jsonResponse[0]) {
             throw new Error('Could not fetch Jira Cloud ID.');
          }
+
 
          return jsonResponse[0];
       } catch (error) {
@@ -95,7 +125,28 @@ const JiraService = () => {
       }
    };
 
-   return {fetchJira, fetchCloudId, fetchJiraProjects};
+   const filterIssues = (issues) => {
+      const filteredIssues = issues.issues.map(issue => {
+         return {
+            ProjectId: issue.fields.project.id,
+            Priority: issue.fields.priority.name,
+            Creator: issue.fields.creator.displayName,
+            Created: issue.fields.created,
+            Id: issue.id,
+            Key: issue.key
+         }
+      });
+      return filteredIssues;
+   }
+
+   const addIssuesToProjects = (issues, projects) => {
+      projects.map(project => {
+         project.issues = issues.filter(issue => issue.ProjectId === project.id);
+      })
+      return projects;
+   }
+
+   return {fetchJira, fetchCloudId, fetchJiraProjects, fetchJiraIssues, filterIssues, addIssuesToProjects};
 };
 
 export default JiraService;
