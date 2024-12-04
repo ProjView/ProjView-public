@@ -1,4 +1,4 @@
-import {BASE_URL} from "./auth/authConfig";
+import {AUTHORIZATION_URL, BASE_URL} from "./auth/authConfig";
 
 const JiraService = () => {
    const fetchJira = async () => {
@@ -6,13 +6,13 @@ const JiraService = () => {
       const code = urlParams.get("code");
 
       if (!code) {
-         const authUrl = "https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=clJvF0mJFOElVYoeFqoNzjmUuVMlo8v6&scope=read%3Ajira-work%20manage%3Ajira-project%20manage%3Ajira-configuration%20read%3Ajira-user%20write%3Ajira-work%20manage%3Ajira-webhook%20manage%3Ajira-data-provider&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Foauth-callback&state=${YOUR_USER_BOUND_VALUE}&response_type=code&prompt=consent";
+         const authUrl = `${AUTHORIZATION_URL}`;
          window.location.href = authUrl;
          return;
       }
 
       try {
-         const resp = await fetch(`${BASE_URL}oauth-callback?code=${code}`, {
+         const resp = await fetch(`${BASE_URL}api/oauth-callback?code=${code}`, {
             method: 'GET',
             headers: {
                'accept': '*/*',

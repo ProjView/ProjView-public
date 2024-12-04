@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect, useState } from "react";
+import FileTree from "./FileTree"; // Import the FileTree component
 import './ProjectDetails.css'; // Import the CSS for styling
 import {BASE_URL} from "../auth/authConfig"; // Import the named exports
 import {Button, Col, Container, Form, Modal, Row, Spinner} from 'react-bootstrap';
-import FileTree from "./FileTree";
 
 const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
    const [project, setProject] = useState(null); // State to hold project details

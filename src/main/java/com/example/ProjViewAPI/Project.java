@@ -16,6 +16,7 @@ public class Project {
     private String lead;
     private String url;
     private String oneDriveFolder;
+    private String jiraProjectId;
 
     @Column(length = 1000) // assuming description can be long
     private String description;
@@ -37,8 +38,16 @@ public class Project {
         return name;
     }
 
+    public String getJiraProjectId() {
+        return jiraProjectId;
+    }
+
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setJiraProjectId(String jiraProjectId) {
+        this.jiraProjectId = jiraProjectId;
     }
 
     public String getType() {
