@@ -178,7 +178,6 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
    };
 
    const saveModal = async () => {
-      console.log(selectedJiraProject)
       const updatedData = {
          name: projectName,
          lead: projectLead,

@@ -10,7 +10,6 @@ import AddProjectModal from "./components/AddProjectModal";
 import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
 import { authConfig, authConfigTuke, BASE_URL } from "./auth/authConfig"; // Import the named exports
 import Login from "./auth/Login";
-import {post} from "axios";
 import JiraService from "./JiraService";
 
 const msalInstance = new PublicClientApplication(authConfig); // Create a new MSAL instance for NXT

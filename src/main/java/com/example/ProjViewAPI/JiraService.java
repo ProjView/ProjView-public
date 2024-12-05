@@ -51,15 +51,6 @@ public class JiraService {
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-//            ObjectMapper mapper = new ObjectMapper();
-//            Map<String, TokenResp> map = mapper.readValue(response.body(), Map.class);
-//
-//            TokenResp tokenResp = new TokenResp(
-//                    map.get("access_token").toString(),
-//                    map.get("expires_in").toString(),
-//                    map.get("token_type").toString(),
-//                    map.get("scope").toString()
-//            );
             return ResponseEntity.ok(response.body());
         } catch (IOException | InterruptedException e) {
             return ResponseEntity.status(500).body(e.getMessage());
