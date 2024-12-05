@@ -10,6 +10,7 @@ import AddProjectModal from "./components/AddProjectModal";
 import { PublicClientApplication } from "@azure/msal-browser"; // Import MSAL
 import { authConfig, authConfigTuke, BASE_URL } from "./auth/authConfig"; // Import the named exports
 import Login from "./auth/Login";
+import JiraService from "./JiraService";
 
 const msalInstance = new PublicClientApplication(authConfig); // Create a new MSAL instance for NXT
 const msalInstanceTuke = new PublicClientApplication(authConfigTuke); // Create a new MSAL instance for TUKE
@@ -21,6 +22,10 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [accessToken, setAccessToken] = useState(null);
+  const [accessTokenJira, setAccessTokenJira] = useState(null);
+  const [cloudId, setCloudId] = useState(null);
+  const [jiraProjects, setJiraProjects] = useState(null);
+  const { fetchJira, fetchCloudId, fetchJiraProjects, fetchJiraIssues, filterIssues, addIssuesToProjects } = JiraService();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
@@ -36,6 +41,50 @@ function App() {
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
   const [loading, setLoading] = useState(true);
+
+  //-------JIRA
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const expiration = localStorage.getItem('accessTokenJiraExpiration')
+    if(!localStorage.getItem('accessTokenJira') || Date.now() > expiration){
+      fetchJira()
+         .then(response => {
+           setAccessTokenJira(response.access_token);
+           localStorage.setItem('accessTokenJira', response.access_token);
+           localStorage.setItem('accessTokenJiraExpiration', Date.now() + response.expires_in *1000)
+           window.location.href = BASE_URL;
+         })
+         .catch(error => {
+           console.error('Failed to fetch Jira data:', error);
+         });
+    }
+  },[isLoggedIn])
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    fetchCloudId()
+       .then(cloudData => {
+         localStorage.setItem('cloudId', cloudData.id);
+         setCloudId(cloudData.id);
+
+         fetchJiraProjects().then(projects => {
+           fetchJiraIssues().then(issues => {
+             console.log(addIssuesToProjects(filterIssues(issues), projects));
+             setJiraProjects(addIssuesToProjects(filterIssues(issues), projects));
+           }).catch(e => {
+             console.error(e);
+           })
+         }).catch(e => {
+           console.error(e);
+         })
+
+       })
+       .catch(error => {
+         console.error('Failed to fetch Jira Cloud ID:', error);
+       });
+  },[accessTokenJira, isLoggedIn])
 
   // Initialize MSAL on component mount
   useEffect(() => {
@@ -280,17 +329,17 @@ function App() {
     setIsModalOpen(false);
     setProjectDetailsModalOpen(false);
     await refreshProjects();
-  
+
     // Set the new project ID for highlighting
     setNewProjectId(newProjectId);
     setHighlightActive(true); // Activate the highlight
-  
+
     // Ensure the new status is visible if not already selected
     if (typeof newProjectStatus !== "string") {
-      return; 
+      return;
     }
     const statusLower = newProjectStatus.toLowerCase();
-    
+
     if (!selectedStatuses.includes(statusLower)) {
       setSelectedStatuses(prevStatuses => [...prevStatuses, statusLower]);
     }
@@ -298,7 +347,7 @@ function App() {
     if (shouldClose) {
         setTimeout(() => {
             document.body.classList.remove("modal-open");
-        }, 250); 
+        }, 250);
     }
   };
 
@@ -339,10 +388,10 @@ function App() {
       return description;
     }
     return description.slice(0, maxLength) + '...';
-  };  
- 
+  };
+
   return (
-     
+
     <div>
       {isLoggedIn ? (
         <>
@@ -364,7 +413,7 @@ function App() {
               <Col xs={12} md={3} style={{ maxWidth: "250px" }} className="pe-3">
                 <Card>
                   <Card.Body>
-                    
+
                     <div className="filterWrapper">
                       <h4>Statuses</h4>
                       <ul className="filterUl">
@@ -449,6 +498,7 @@ function App() {
                       <thead>
                         <tr>
                           <th>Project</th>
+                          <th>Issues</th>
                           <th>Status</th>
                           <th>Project Lead</th>
                           <th>URL</th>
@@ -476,6 +526,11 @@ function App() {
                                   {truncateDescription(project.description, 200)} {/* Limit to 100 characters */}
                                 </span>
                               )}
+                            </td>
+                            <td>
+                              {jiraProjects?.filter(proj => proj.id === project.jiraProjectId).length > 0
+                                 ? jiraProjects.find(proj => proj.id === project.jiraProjectId)?.issues?.length || 'NaN'
+                                 : 'NaN'}
                             </td>
                             <td>
                               {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
@@ -511,6 +566,7 @@ function App() {
               projectId={currentProjectId}
               onClose={closeModal}
               accessToken={accessToken}
+              jiraProjects={jiraProjects}
             />
           )}
         </>
