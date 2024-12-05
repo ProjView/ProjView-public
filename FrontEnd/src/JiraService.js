@@ -7,6 +7,7 @@ const JiraService = () => {
 
       if (!code) {
          const authUrl = `${AUTHORIZATION_URL}`;
+         console.log('authURL: '+ authUrl);
          window.location.href = authUrl;
          return;
       }
