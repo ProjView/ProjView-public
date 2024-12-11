@@ -400,14 +400,6 @@ function App() {
 
           {/* Browse Projects Block */}
           <Container fluid className="my-4">
-            {/* Browse Projects Header */}
-            <Row className="mb-3">
-              <Col>
-                <h2>Browse projects</h2>
-                <hr />
-              </Col>
-            </Row>
-
             <Row>
               {/* Left Sidebar (Statuses) */}
               <Col xs={12} md={3} style={{ maxWidth: "250px" }} className="pe-3">
@@ -423,7 +415,10 @@ function App() {
                             onClick={() => toggleStatus("active")}
                             className={selectedStatuses.includes("active") ? "active" : ""}
                           >
-                            <FontAwesomeIcon icon={faCheck} /> Active
+                            <span className="icon">
+                              <FontAwesomeIcon icon={faCheck} /> 
+                            </span>
+                            <span className="text">Active</span>
                           </a>
                         </li>
                         <li className="filterIl">
@@ -432,7 +427,10 @@ function App() {
                             onClick={() => toggleStatus("new")}
                             className={selectedStatuses.includes("new") ? "active" : ""}
                           >
-                            <FontAwesomeIcon icon={faPen} /> New
+                            <span className="icon">
+                              <FontAwesomeIcon icon={faPen} />
+                            </span> 
+                            <span className="text">New</span>
                           </a>
                         </li>
                         <li className="filterIl">
@@ -441,7 +439,10 @@ function App() {
                             onClick={() => toggleStatus("hold")}
                             className={selectedStatuses.includes("hold") ? "active" : ""}
                           >
-                            <FontAwesomeIcon icon={faPause} /> Hold
+                            <span className="icon">
+                              <FontAwesomeIcon icon={faPause} />
+                            </span>
+                            <span className="text">Hold</span>
                           </a>
                         </li>
                         <li className="filterIl">
@@ -450,7 +451,10 @@ function App() {
                             onClick={() => toggleStatus("end")}
                             className={selectedStatuses.includes("end") ? "active" : ""}
                           >
-                            <FontAwesomeIcon icon={faXmark} /> End
+                            <span className="icon">
+                              <FontAwesomeIcon icon={faXmark} /> 
+                            </span>
+                            <span className="text">End</span>
                           </a>
                         </li>
                       </ul>
@@ -467,15 +471,17 @@ function App() {
                     <h3>{getHeaderText()}</h3>
                   </Col>
                   <Col md="auto">
+                    <Button
+                      onClick={openModal}
+                      variant="primary"
+                      className="rounded-pill me-0"
+                    >
+                      <FontAwesomeIcon icon={faFileCirclePlus} className="me-2" />
+                      Add Project
+                    </Button>
+                  </Col>
+                  <Col md="auto">
                     <InputGroup>
-                      <Button
-                        onClick={openModal}
-                        variant="primary"
-                        className="rounded-pill me-2"
-                      >
-                        <FontAwesomeIcon icon={faFileCirclePlus} className="me-2" />
-                        Add Project
-                      </Button>
                       <FormControl
                         type="text"
                         value={searchTerm}
@@ -493,8 +499,8 @@ function App() {
                     <Spinner animation="border" variant="primary" />
                   </div>
                 ) : (
-                  <div ref={projectListRef} className="project-table-container" style={{ maxWidth: "100%", margin: "0 auto", overflowY: "auto", overflowX: "auto", position: "relative", marginBottom: "20px" }}>
-                    <Table responsive striped bordered hover className="w-100" style = {{minHeight: "100%"}}>
+                  <div ref={projectListRef} className="project-table-container">
+                    <Table responsive striped bordered hover className="table w-100">
                       <thead>
                         <tr>
                           <th>Project</th>
@@ -502,6 +508,7 @@ function App() {
                           <th>Status</th>
                           <th>Project Lead</th>
                           <th>URL</th>
+                          <th></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -529,8 +536,8 @@ function App() {
                             </td>
                             <td>
                               {jiraProjects?.filter(proj => proj.id === project.jiraProjectId).length > 0
-                                 ? jiraProjects.find(proj => proj.id === project.jiraProjectId)?.issues?.length || 'NaN'
-                                 : 'NaN'}
+                                 ? jiraProjects.find(proj => proj.id === project.jiraProjectId)?.issues?.length || '0'
+                                 : '0'}
                             </td>
                             <td>
                               {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}
