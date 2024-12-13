@@ -25,7 +25,8 @@ function App() {
   const [accessTokenJira, setAccessTokenJira] = useState(null);
   const [cloudId, setCloudId] = useState(null);
   const [jiraProjects, setJiraProjects] = useState(null);
-  const { fetchJira, fetchCloudId, fetchJiraProjects, fetchJiraIssues, filterIssues, addIssuesToProjects } = JiraService();
+  const { fetchJira, fetchCloudId, fetchJiraProjects, fetchJiraIssues,
+    filterIssues, addIssuesToProjects, checkExpiration } = JiraService();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
   const navigate = useNavigate();
@@ -45,24 +46,41 @@ function App() {
   //-------JIRA
   useEffect(() => {
     if (!isLoggedIn) return;
-
-    const expiration = localStorage.getItem('accessTokenJiraExpiration')
-    if(!localStorage.getItem('accessTokenJira') || Date.now() > expiration){
-      fetchJira()
-         .then(response => {
-           setAccessTokenJira(response.access_token);
-           localStorage.setItem('accessTokenJira', response.access_token);
-           localStorage.setItem('accessTokenJiraExpiration', Date.now() + response.expires_in *1000)
-           window.location.href = BASE_URL;
-         })
-         .catch(error => {
-           console.error('Failed to fetch Jira data:', error);
-         });
+    if (localStorage.getItem('refreshTokenJira') ){
+      checkExpiration().then(response => {
+               setAccessTokenJira(response.access_token);
+               localStorage.setItem('accessTokenJira', response.access_token);
+               localStorage.setItem('accessTokenJiraExpiration', Date.now() + response.expires_in *1000)
+               window.location.href = BASE_URL;
+             })
+             .catch();
+    } else {
+        fetchJira()
+           .then(response => {
+             setAccessTokenJira(response.access_token);
+             localStorage.setItem('accessTokenJira', response.access_token);
+             localStorage.setItem('refreshTokenJira', response.refresh_token);
+             localStorage.setItem('accessTokenJiraExpiration', Date.now() + response.expires_in *1000)
+             window.location.href = BASE_URL;
+           })
+           .catch(error => {
+             console.error('Failed to fetch Jira data:', error);
+           });
     }
   },[isLoggedIn])
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if(!isLoggedIn) return;
+    checkExpiration()
+       .then(response => {
+         setAccessTokenJira(response.access_token);
+         localStorage.setItem('accessTokenJira', response.access_token);
+         localStorage.setItem('accessTokenJiraExpiration', Date.now() + response.expires_in *1000)
+         window.location.href = BASE_URL;
+       })
+       .catch(error => {
+         console.error('Failed to fetch Jira data:', error);
+       });
 
     fetchCloudId()
        .then(cloudData => {
@@ -236,6 +254,7 @@ function App() {
     setUserName("");
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userName');
+    localStorage.removeItem('accessTokenJira');
   };
 
   // Fetching projects from the backend API
@@ -529,8 +548,8 @@ function App() {
                             </td>
                             <td>
                               {jiraProjects?.filter(proj => proj.id === project.jiraProjectId).length > 0
-                                 ? jiraProjects.find(proj => proj.id === project.jiraProjectId)?.issues?.length || 'NaN'
-                                 : 'NaN'}
+                                 ? jiraProjects.find(proj => proj.id === project.jiraProjectId)?.issues?.length || ''
+                                 : ''}
                             </td>
                             <td>
                               {project.type.toLowerCase() === "active" && <FontAwesomeIcon icon={faCheck} />}

@@ -1,10 +1,7 @@
 package com.example.ProjViewAPI;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
@@ -19,5 +16,10 @@ public class JiraController {
     @GetMapping("/api/oauth-callback")
     public ResponseEntity<String> oauthCallback(@RequestParam("code") String code) {
         return jiraService.getAccessToken(code);
+    }
+
+    @PostMapping("/api/refresh")
+    public ResponseEntity<String> refreshToken(@RequestHeader("Authorization") String token){
+        return jiraService.getRefreshToken(token);
     }
 }
