@@ -55,7 +55,29 @@ public class JiraService {
         } catch (IOException | InterruptedException e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
+    }
 
+    public ResponseEntity<String> getRefreshToken(String token) {
+        String httpUrl = "https://auth.atlassian.com/oauth/token";
+        String bodyString = "{ \"grant_type\": \"refresh_token\", " +
+                "\"client_id\": \"" + clientId + "\", " +
+                "\"client_secret\": \"" + clientSecret + "\", " +
+                "\"refresh_token\": \"" + token + "\"}";
+        HttpRequest request = HttpRequest
+                .newBuilder()
+                .uri(URI.create(httpUrl))
+                .version(HttpClient.Version.HTTP_2)
+                .timeout(Duration.ofMinutes(1))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(bodyString))
+                .build();
 
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return ResponseEntity.status(response.statusCode()).body(response.body());
+//            return ResponseEntity.ok(response.body());
+        } catch (IOException | InterruptedException e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 }
