@@ -1,13 +1,44 @@
 import {AUTHORIZATION_URL, BASE_URL} from "./auth/authConfig";
 
 const JiraService = () => {
+
+   const checkExpiration = async () => {
+      let expiration = localStorage.getItem('accessTokenJiraExpiration');
+      let refreshToken = localStorage.getItem('refreshTokenJira');
+
+      const accessToken = localStorage.getItem('accessTokenJira');
+
+      if (Date.now() > expiration || !accessToken){
+         try {
+            const resp = await fetch(`${BASE_URL}api/refresh`, {
+               method: 'POST',
+               headers: {
+                  'accept': '*/*',
+                  'Content-Type': 'application/json',
+                  'Authorization': refreshToken
+               },
+            });
+
+            if (!resp.ok) {
+               console.error('Error refreshing token:');
+               return fetchJira()
+            }
+
+            return await resp.json();
+         } catch (error) {
+            console.error('Error fetching Jira data:', error);
+         }
+      }
+   }
+
    const fetchJira = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get("code");
 
       if (!code) {
-         const authUrl = `${AUTHORIZATION_URL}`;
-         console.log('authURL: '+ authUrl);
+         let authUrl = `${AUTHORIZATION_URL}`;
+         authUrl = authUrl.split("scope=").at(0) + "scope=offline_access%20" + authUrl.split("scope=").at(1)
+
          window.location.href = authUrl;
          return;
       }
@@ -127,7 +158,9 @@ const JiraService = () => {
    };
 
    const filterIssues = (issues) => {
-      const filteredIssues = issues.issues.map(issue => {
+      const filteredIssues = issues.issues
+         .filter(issue => !((issue.fields.status.name === 'Hotovo') || issue.fields.status.name === 'Done'))
+         .map(issue => {
          return {
             ProjectId: issue.fields.project.id,
             Priority: issue.fields.priority.name,
@@ -147,7 +180,9 @@ const JiraService = () => {
       return projects;
    }
 
-   return {fetchJira, fetchCloudId, fetchJiraProjects, fetchJiraIssues, filterIssues, addIssuesToProjects};
+   return {fetchJira, fetchCloudId, fetchJiraProjects,
+      fetchJiraIssues, filterIssues, addIssuesToProjects,
+      checkExpiration};
 };
 
 export default JiraService;
