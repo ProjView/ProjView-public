@@ -22,7 +22,7 @@ jobs:
           java-version: '21'
           distribution: 'microsoft'
 
-      # Build React Application
+       # Build React Application
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -35,7 +35,7 @@ jobs:
       - name: Build React app
         run: npm run build
         working-directory: ./FrontEnd  # Change to your React app folder
-        env:  # Pass the secrets as environment variables
+        env:  
           CI: false  # Temporarily set CI to false to bypass warnings as errors
 
       - name: Copy React build to Spring Boot static folder
@@ -53,14 +53,6 @@ jobs:
 
       - name: Build with Maven
         run: mvn clean install
-        # Uncomment and set the environment variables if needed
-        # env:
-        #   SPRING_DATASOURCE_URL: ${{ secrets.SPRING_DATASOURCE_URL }}
-        #   SPRING_DATASOURCE_USERNAME: ${{ secrets.SPRING_DATASOURCE_USERNAME }}
-        #   SPRING_DATASOURCE_PASSWORD: ${{ secrets.SPRING_DATASOURCE_PASSWORD }}
-        #   JIRA_CLIENT_ID: ${{ secrets.JIRA_CLIENT_ID }}
-        #   JIRA_SECRET: ${{ secrets.JIRA_SECRET }}
-        #   JIRA_REDIRECT_URI: ${{ secrets.JIRA_REDIRECT_URI }}
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -75,7 +67,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write  # This is required for requesting the JWT
+      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -96,4 +88,7 @@ jobs:
         with:
           app-name: 'projview'
           slot-name: 'Production'
-          package: '${{ github.workspace }}/target/*.jar'  # Ensure correct path to JAR file
+          package: '*.jar'
+          
+
+          
