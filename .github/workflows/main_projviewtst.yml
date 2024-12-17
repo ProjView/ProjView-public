@@ -37,6 +37,13 @@ jobs:
         working-directory: ./FrontEnd  # Change to your React app folder
         env:  
           CI: false  # Temporarily set CI to false to bypass warnings as errors
+          REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}  # Reference GitHub Secrets
+          REACT_APP_AUTHORITY: ${{ secrets.REACT_APP_AUTHORITY }}  # Reference GitHub Secrets
+          REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}  # Reference GitHub Secrets
+          REACT_APP_CLIENT_ID_TUKE: ${{ secrets.REACT_APP_CLIENT_ID_TUKE }}  # Reference GitHub Secrets
+          REACT_APP_AUTHORITY_TUKE: ${{ secrets.REACT_APP_AUTHORITY_TUKE }}  # Reference GitHub Secrets
+          REACT_APP_BASE_URL: ${{ secrets.REACT_APP_BASE_URL }}  # Reference GitHub Secrets
+          REACT_APP_AUTHORIZATION_URL: ${{ secrets.REACT_APP_AUTHORIZATION_URL }}  # Reference GitHub Secrets
 
       - name: Copy React build to Spring Boot static folder
         run: |
