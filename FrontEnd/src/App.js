@@ -48,12 +48,13 @@ function App() {
     if (!isLoggedIn) return;
     if (localStorage.getItem('refreshTokenJira') ){
       checkExpiration().then(response => {
-               setAccessTokenJira(response.access_token);
-               localStorage.setItem('accessTokenJira', response.access_token);
-               localStorage.setItem('accessTokenJiraExpiration', Date.now() + response.expires_in *1000)
-               window.location.href = BASE_URL;
-             })
-             .catch();
+        if (!response) return;
+           setAccessTokenJira(response.access_token);
+           localStorage.setItem('accessTokenJira', response.access_token);
+           localStorage.setItem('accessTokenJiraExpiration', Date.now() + response.expires_in *1000)
+           window.location.href = BASE_URL;
+         })
+         .catch();
     } else {
         fetchJira()
            .then(response => {
@@ -73,6 +74,7 @@ function App() {
     if(!isLoggedIn) return;
     checkExpiration()
        .then(response => {
+         if (!response) return;
          setAccessTokenJira(response.access_token);
          localStorage.setItem('accessTokenJira', response.access_token);
          localStorage.setItem('accessTokenJiraExpiration', Date.now() + response.expires_in *1000)
