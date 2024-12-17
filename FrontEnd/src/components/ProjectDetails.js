@@ -93,7 +93,7 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
 
    const fetchACEFolderItems = async () => {
       if (!accessToken) return; // Ensure access token is available
-
+   
       try {
          const myDriveResponse = await fetch(`https://graph.microsoft.com/v1.0/me/drive/root/children`, {
             method: "GET",
@@ -102,16 +102,19 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
                "Content-Type": "application/json",
             },
          });
-
+   
          const myDriveData = myDriveResponse.ok ? await myDriveResponse.json() : {value: []};
-
+   
          // Check if the folder /ACE/ exists among your own folders
          const aceFolder = myDriveData.value.find(folder => folder.name === "ACE" && folder.folder);
-
+   
          if (aceFolder) {
             // Fetch all subfolders recursively
             aceFolder.subfolders = await fetchAllSubfolders(aceFolder.id);
-            setSharedFolders([aceFolder]); // Set the ACE folder data
+            aceFolder.subfolders.sort((a, b) => a.name.localeCompare(b.name)); // Sort the subfolders
+            
+            // Set the shared folders to include the ACE folder and its subfolders
+            setSharedFolders([aceFolder]); // Store the ACE folder and its subfolders
          } else {
             console.log("The /ACE/ folder does not exist in your drive.");
          }
@@ -276,15 +279,22 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
       }
    };
 
-   const renderSubfolders = (subfolders, parentPath) => {
-      return subfolders.map(subfolder => (
-         <React.Fragment key={subfolder.id}>
-            <option value={`${parentPath}/${subfolder.name}`}>
-               {subfolder.name}
-            </option>
-            {subfolder.subfolders.length > 0 && renderSubfolders(subfolder.subfolders, `${parentPath}/${subfolder.name}`)}
-         </React.Fragment>
-      ));
+   const renderSubfolders = (subfolders, parentPath = '') => {
+      // Sort subfolders by name
+      const sortedSubfolders = subfolders.sort((a, b) => a.name.localeCompare(b.name));
+      return sortedSubfolders.map(subfolder => {
+         // Ensure that the currentPath is constructed without double slashes
+         const currentPath = `${parentPath}${parentPath ? '/' : ''}${subfolder.name}`; // Add a slash only if parentPath is not empty
+         const displayPath = currentPath.startsWith('ACE') ? currentPath.substring(3) : currentPath; // Remove '/ACE' from the path
+         return (
+            <React.Fragment key={subfolder.id}>
+               <option value={currentPath}>
+                  {displayPath} {/* Show the full path without the ACE prefix */}
+               </option>
+               {subfolder.subfolders.length > 0 && renderSubfolders(subfolder.subfolders, currentPath)} {/* Pass currentPath directly */}
+            </React.Fragment>
+         );
+      });
    };
 
    const handleFolderSelect = (folderName) => {
