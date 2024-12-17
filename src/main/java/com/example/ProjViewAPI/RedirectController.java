@@ -12,7 +12,7 @@ public class RedirectController {
     private String base;
 
 //    @RequestMapping(value = {"/", "/{path:^(?!api).*}"})
-    @RequestMapping(value = {"/", "/oauth-callback"})
+    @RequestMapping(value = {"/", "/oauth-callback", "/oauth-callback**"})
     public String forwardToIndex(HttpServletRequest request) {
         String queryString = request.getQueryString(); // Extract query parameters
         String forwardPath = "forward:/index.html";
