@@ -1,4 +1,4 @@
-package com.example.ProjViewAPI;
+package com.example.ProjViewAPI.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
