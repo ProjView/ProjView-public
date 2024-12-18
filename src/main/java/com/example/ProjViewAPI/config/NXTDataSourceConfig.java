@@ -2,6 +2,7 @@ package com.example.ProjViewAPI.config;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -23,12 +24,21 @@ import java.util.HashMap;
 )
 public class NXTDataSourceConfig {
 
+    @Value("${spring.datasource.url}")
+    private String url;
+
+    @Value("${spring.datasource.username}")
+    private String username;
+
+    @Value("${spring.datasource.password}")
+    private String password;
+
     @Bean(name = "nxtDataSource")
     public DataSource nxtDataSource() {
         return DataSourceBuilder.create()
-                .url("jdbc:postgresql://nxtsoft.sk:5432/2pnvcfie")
-                .username("2pnvcfie")
-                .password("As2m4@R$l5")
+                .url(url)
+                .username(username)
+                .password(password)
                 .driverClassName("org.postgresql.Driver")
                 .build();
     }

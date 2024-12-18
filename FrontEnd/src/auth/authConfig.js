@@ -28,3 +28,5 @@ export { authConfig, authConfigTuke }; // Export the authConfig object
 export const BASE_URL = process.env.REACT_APP_BASE_URL; // Use environment variable
 
 export const AUTHORIZATION_URL = process.env.REACT_APP_AUTHORIZATION_URL;
+
+export const AUTHORIZATION_URL_TUKE = process.env.REACT_APP_AUTHORIZATION_URL;

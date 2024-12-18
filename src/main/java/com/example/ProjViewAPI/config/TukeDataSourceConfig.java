@@ -2,6 +2,7 @@ package com.example.ProjViewAPI.config;
 
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -23,12 +24,21 @@ import java.util.HashMap;
 )
 public class TukeDataSourceConfig {
 
+    @Value("${spring.datasource.url.tuke}")
+    private String url;
+
+    @Value("${spring.datasource.username.tuke}")
+    private String username;
+
+    @Value("${spring.datasource.password.tuke}")
+    private String password;
+
     @Bean(name = "tukeDataSource")
     public DataSource tukeDataSource() {
         return DataSourceBuilder.create()
-                .url("jdbc:postgresql://nxtsoft.sk:5432/b6bltl5e")
-                .username("b6bltl5e")
-                .password("Hd24^]+{Zy")
+                .url(url) // Use the injected URL
+                .username(username) // Use the injected username
+                .password(password) // Use the injected password
                 .driverClassName("org.postgresql.Driver")
                 .build();
     }

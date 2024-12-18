@@ -6,19 +6,16 @@ import { Container, Row, Col, Card, Button, Spinner } from 'react-bootstrap';
 
 const Login = ({ onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [tukeLogin, setTukeLogin] = useState(false);
 
   const handleLoginClick = async () => {
-    setTukeLogin(false);
     setIsLoading(true); 
-    await onLogin(tukeLogin); 
+    await onLogin(false); 
     setIsLoading(false); 
   };
 
   const handleLoginClickTUKE = async () => {
-    setTukeLogin(true);
     setIsLoading(true); 
-    await onLogin(tukeLogin); 
+    await onLogin(true); 
     setIsLoading(false); 
   };
 

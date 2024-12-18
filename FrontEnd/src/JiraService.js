@@ -1,8 +1,8 @@
-import {AUTHORIZATION_URL, BASE_URL} from "./auth/authConfig";
+import {AUTHORIZATION_URL, AUTHORIZATION_URL_TUKE, BASE_URL} from "./auth/authConfig";
 
 const JiraService = () => {
 
-   const checkExpiration = async () => {
+   const checkExpiration = async (jiraSourceCode) => {
       let expiration = localStorage.getItem('accessTokenJiraExpiration');
       let refreshToken = localStorage.getItem('refreshTokenJira');
 
@@ -10,7 +10,7 @@ const JiraService = () => {
 
       if (Date.now() > expiration || !accessToken){
          try {
-            const resp = await fetch(`${BASE_URL}api/refresh`, {
+            const resp = await fetch(`${BASE_URL}api/refresh?source=${jiraSourceCode}`, {
                method: 'POST',
                headers: {
                   'accept': '*/*',
@@ -31,12 +31,12 @@ const JiraService = () => {
       }
    }
 
-   const fetchJira = async () => {
+   const fetchJira = async (jiraSourceCode) => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get("code");
 
       if (!code) {
-         let authUrl = `${AUTHORIZATION_URL}`;
+         const authUrl = localStorage.getItem('isTukeLogin') ? AUTHORIZATION_URL : AUTHORIZATION_URL_TUKE;
          authUrl = authUrl.split("scope=").at(0) + "scope=offline_access%20" + authUrl.split("scope=").at(1)
 
          window.location.href = authUrl;
@@ -44,11 +44,11 @@ const JiraService = () => {
       }
 
       try {
-         const resp = await fetch(`${BASE_URL}api/oauth-callback?code=${code}`, {
+         const resp = await fetch(`${BASE_URL}api/oauth-callback?code=${code}&source=${jiraSourceCode}`, {
             method: 'GET',
             headers: {
                'accept': '*/*',
-               'Content-Type': 'application/json',
+               'Content-Type': 'application/json'
             },
          });
 
@@ -81,7 +81,7 @@ const JiraService = () => {
             method: 'GET',
             headers: {
                'Accept': 'application/json',
-               'Authorization': `Bearer ${accessTokenJira}`,
+               'Authorization': `Bearer ${accessTokenJira}`
             },
          });
 
@@ -112,7 +112,7 @@ const JiraService = () => {
             method: 'GET',
             headers: {
                'Accept': 'application/json',
-               'Authorization': `Bearer ${accessTokenJira}`,
+               'Authorization': `Bearer ${accessTokenJira}`
             },
          });
 

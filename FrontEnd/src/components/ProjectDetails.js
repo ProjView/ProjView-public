@@ -22,7 +22,7 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
    useEffect(() => {
       const fetchProjectDetails = async () => {
          try {
-            const response = await fetch(`${BASE_URL}/api/projects/${projectId}`);
+            const response = await fetch(`${BASE_URL}/api/projects/${projectId}?useTuke=${localStorage.getItem('isTukeLogin')}`);
             const projectData = await response.json();
             console.log("Fetched project data:", projectData);
             setProject(projectData);
@@ -126,7 +126,7 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
    const updateProject = async (updatedData, closeModal) => {
       try {
          console.log("Updating project with data:", updatedData);
-         const response = await fetch(`${BASE_URL}/api/projects/${projectId}`, {
+         const response = await fetch(`${BASE_URL}/api/projects/${projectId}?useTuke=${localStorage.getItem('isTukeLogin')}`, {
             method: 'PUT',
             headers: {
                'Content-Type': 'application/json'

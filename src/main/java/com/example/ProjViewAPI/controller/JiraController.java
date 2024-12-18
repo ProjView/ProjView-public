@@ -4,41 +4,29 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.ProjViewAPI.service.JiraService;
-import com.example.ProjViewAPI.service.JiraServiceTuke;
 
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
+@RequestMapping("/api") // Base path for the Jira API
 public class JiraController {
 
     private final JiraService jiraService;
-    private final JiraServiceTuke jiraServiceTuke;
 
-    public JiraController(JiraService jiraService, JiraServiceTuke jiraServiceTuke) {
+    public JiraController(JiraService jiraService) {
         this.jiraService = jiraService;
-        this.jiraServiceTuke = jiraServiceTuke;
     }
 
-    // OAuth callback for standard Jira service
-    @GetMapping("/api/oauth-callback")
-    public ResponseEntity<String> oauthCallback(@RequestParam("code") String code) {
-        return jiraService.getAccessToken(code);
+    // OAuth callback for Jira service
+    @GetMapping("/oauth-callback")
+    public ResponseEntity<String> oauthCallback(@RequestParam("code") String code,
+                                                @RequestParam("source") String source) {
+        return jiraService.getAccessToken(code, source);
     }
 
-    // Refresh token for standard Jira service
-    @PostMapping("/api/refresh")
-    public ResponseEntity<String> refreshToken(@RequestHeader("Authorization") String token) {
-        return jiraService.getRefreshToken(token);
-    }
-
-    // OAuth callback for Tuke Jira service
-    @GetMapping("/api/oauth-callback-tuke")
-    public ResponseEntity<String> oauthCallbackTuke(@RequestParam("code") String code) {
-        return jiraServiceTuke.getAccessToken(code);
-    }
-
-    // Refresh token for Tuke Jira service
-    @PostMapping("/api/refresh-tuke")
-    public ResponseEntity<String> refreshTokenTuke(@RequestHeader("Authorization") String token) {
-        return jiraServiceTuke.getRefreshToken(token);
+    // Refresh token for Jira service
+    @PostMapping("/refresh")
+    public ResponseEntity<String> refreshToken(@RequestHeader("Authorization") String token,
+                                               @RequestParam("source") String source) {
+        return jiraService.getRefreshToken(token, source);
     }
 }
