@@ -44,6 +44,7 @@ jobs:
           REACT_APP_AUTHORITY_TUKE: ${{ secrets.REACT_APP_AUTHORITY_TUKE }}  # Reference GitHub Secrets
           REACT_APP_BASE_URL: ${{ secrets.REACT_APP_BASE_URL }}  # Reference GitHub Secrets
           REACT_APP_AUTHORIZATION_URL: ${{ secrets.REACT_APP_AUTHORIZATION_URL }}  # Reference GitHub Secrets
+          REACT_APP_AUTHORIZATION_URL_TUKE: ${{ secrets.REACT_APP_AUTHORIZATION_URL_TUKE }}  # Reference GitHub Secrets
 
       - name: Copy React build to Spring Boot static folder
         run: |
