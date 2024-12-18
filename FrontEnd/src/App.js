@@ -40,14 +40,16 @@ function App() {
   const [selectedStatuses, setSelectedStatuses] = useState(["new", "active"]); // Default selected statuses
   const [projectDetailsModalOpen, setProjectDetailsModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
+  const [jiraSourceCode, setjiraSourceCode] = useState("");
 
   const [loading, setLoading] = useState(true);
 
   //-------JIRA
   useEffect(() => {
     if (!isLoggedIn) return;
+    setjiraSourceCode(localStorage.getItem('isTukeLogin') ? setjiraSourceCode("tuke") : setjiraSourceCode("nxt"));
     if (localStorage.getItem('refreshTokenJira') ){
-      checkExpiration().then(response => {
+      checkExpiration(jiraSourceCode).then(response => {
         if (!response) return;
            setAccessTokenJira(response.access_token);
            localStorage.setItem('accessTokenJira', response.access_token);
@@ -56,7 +58,7 @@ function App() {
          })
          .catch();
     } else {
-        fetchJira()
+        fetchJira(jiraSourceCode)
            .then(response => {
              setAccessTokenJira(response.access_token);
              localStorage.setItem('accessTokenJira', response.access_token);
@@ -72,7 +74,8 @@ function App() {
 
   useEffect(() => {
     if(!isLoggedIn) return;
-    checkExpiration()
+    setjiraSourceCode(localStorage.getItem('isTukeLogin') ? setjiraSourceCode("tuke") : setjiraSourceCode("nxt"));
+    checkExpiration(jiraSourceCode)
        .then(response => {
          if (!response) return;
          setAccessTokenJira(response.access_token);
@@ -120,10 +123,7 @@ function App() {
           setAccessToken(storedAccessToken);
           setIsLoggedIn(true);
           await refreshAccessToken(); // Refresh token if it's close to expiring
-        } else {
-          // If not logged in, prompt for login
-          // await authenticateOneDrive();
-        }
+        } 
       } catch (error) {
         console.error("MSAL Initialization error:", error);
       }
@@ -144,6 +144,7 @@ function App() {
 
   // Function to authenticate user
   const authenticateOneDrive = async (tukeLogin) => {
+    localStorage.setItem('isTukeLogin', tukeLogin);
     setTukeLogin(tukeLogin);
     if(tukeLogin) {
       try {
@@ -257,6 +258,7 @@ function App() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('userName');
     localStorage.removeItem('accessTokenJira');
+    localStorage.removeItem('isTukeLogin');
   };
 
   // Fetching projects from the backend API
@@ -267,7 +269,7 @@ function App() {
       setLoading(true); // Start loading
 
       try {
-        const response = await fetch(`${BASE_URL}/api/projects`, {
+        const response = await fetch(`${BASE_URL}/api/projects?useTuke=${localStorage.getItem('isTukeLogin')}`, {
           method: 'GET',
           headers: {
             'accept': '*/*',
@@ -296,11 +298,11 @@ function App() {
     if (!isLoggedIn) return; // Don't refresh if not logged in
 
     try {
-      const response = await fetch(`${BASE_URL}/api/projects`, {
+      const response = await fetch(`${BASE_URL}/api/projects?useTuke=${localStorage.getItem('isTukeLogin')}`, {
         method: 'GET',
         headers: {
           'accept': '*/*',
-          Authorization: `Bearer ${accessToken}` // Include the access token in the request
+          'useTuke': localStorage.getItem('isTukeLogin')  
         }
       });
 
@@ -324,7 +326,7 @@ function App() {
   // Deleting a project by ID
   const deleteProject = async (id) => {
     try {
-      const response = await fetch(`${BASE_URL}/api/projects/${id}`, {
+      const response = await fetch(`${BASE_URL}/api/projects/${id}?useTuke=${localStorage.getItem('isTukeLogin')}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${accessToken}` // Include the access token in the request

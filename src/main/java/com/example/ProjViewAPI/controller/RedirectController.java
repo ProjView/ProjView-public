@@ -1,4 +1,4 @@
-package com.example.ProjViewAPI;
+package com.example.ProjViewAPI.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;

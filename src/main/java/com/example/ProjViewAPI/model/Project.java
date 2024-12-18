@@ -1,4 +1,4 @@
-package com.example.ProjViewAPI;
+package com.example.ProjViewAPI.model;
 
 import jakarta.persistence.*;
 import java.util.List;
@@ -15,13 +15,13 @@ public class Project {
     private String type;
     private String lead;
     private String url;
-    private String oneDriveFolder;
-    private String jiraProjectId;
+    private String one_drive_folder;
+    private String jira_project_id;
 
     @Column(length = 1000) // assuming description can be long
     private String description;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER) // Change to EAGER
     @CollectionTable(name = "project_comments", joinColumns = @JoinColumn(name = "project_id"))
     private List<Comment> comments;
 
@@ -39,15 +39,15 @@ public class Project {
     }
 
     public String getJiraProjectId() {
-        return jiraProjectId;
+        return jira_project_id;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setJiraProjectId(String jiraProjectId) {
-        this.jiraProjectId = jiraProjectId;
+    public void setJiraProjectId(String jira_project_id) {
+        this.jira_project_id = jira_project_id;
     }
 
     public String getType() {
@@ -83,11 +83,11 @@ public class Project {
     }
 
     public String getOneDriveFolder() {
-        return oneDriveFolder;
+        return one_drive_folder;
     }
 
-    public void setOneDriveFolder(String oneDriveFolder) {
-        this.oneDriveFolder = oneDriveFolder;
+    public void setOneDriveFolder(String one_drive_folder) {
+        this.one_drive_folder = one_drive_folder;
     }
 
     public List<Comment> getComments() {

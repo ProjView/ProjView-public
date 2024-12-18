@@ -26,7 +26,7 @@ const AddProjectModal = ({ isOpen, onClose }) => {
     };
 
     try {
-      const response = await fetch(`${BASE_URL}/api/projects`, {
+      const response = await fetch(`${BASE_URL}/api/projects?useTuke=${localStorage.getItem('isTukeLogin')}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
