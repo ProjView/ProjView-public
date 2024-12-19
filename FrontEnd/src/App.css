@@ -9,13 +9,8 @@
   border: 1px solid #ddd;
 }  */
 
-.project-table-container {
-  max-width: 100%;
-  margin: 0 auto;
-  position: relative;
-  margin-bottom: 20px;
-  height: 100%;
-  border: 1px solid #ddd;
+table tbody tr.table-info {
+  border-top: 1px solid #a6c3ca !important;
 }
 
 .table thead th {
@@ -27,13 +22,49 @@ thead, tbody tr {
   display: table;
   width: 100%;
   table-layout: fixed;
-}
+} 
 
 tbody {
   display: block;
   overflow-y: auto;
   table-layout: fixed;
+}  
+
+
+.table tbody tr {
+  border-top: none !important;
 }
+
+
+.table thead th:nth-child(1),
+.table tbody td:nth-child(1) {
+  width: 40%; 
+}
+
+.table thead th:nth-child(2),
+.table tbody td:nth-child(2) {
+  width: 11%;
+}
+
+.table thead th:nth-child(3),
+.table tbody td:nth-child(3) {
+  width: 12%;
+}
+
+.table thead th:nth-child(4),
+.table tbody td:nth-child(4) {
+  width: 19%;
+}
+
+.table thead th:nth-child(5),
+.table tbody td:nth-child(5) {
+  width: 12%;
+}
+
+.table thead th:nth-child(6),
+.table tbody td:nth-child(6) {
+  width: 5%;
+} 
 
 .filterWrapper {
   margin-left: 20px;
@@ -137,14 +168,15 @@ body, html {
   }
 }
 
-.project-description {
-  font-size: 0.85em; /* Smaller font size */
-  color: #555; /* Optional: Change color for better visibility */
-  margin-left: 10px; /* Space between project name and description */
-  white-space: normal; /* Allow text to wrap */
-  max-width: 200px; /* Set a maximum width for the description */
-  overflow: hidden; /* Hide overflow text */
-  text-overflow: ellipsis; /* Show ellipsis for overflow text */
-  display: block; /* Ensure it behaves as a block element */
+.project-description-box {
+  margin-top: 5px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: pre-wrap;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
 }
-

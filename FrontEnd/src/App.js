@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import './App.css';
-import { Container, Row, Col, Card, Button, InputGroup, FormControl, Table, Spinner } from "react-bootstrap";
+import { Container, Row, Col, Card, Button, InputGroup, FormControl, Table, Spinner, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBriefcase, faCode, faTrash, faFileCirclePlus, faCheck, faXmark, faPen, faQuestionCircle, faPause, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ProjectDetails from "./components/ProjectDetails";
@@ -42,6 +42,13 @@ function App() {
   const [currentProjectId, setCurrentProjectId] = useState(null);
 
   const [loading, setLoading] = useState(true);
+
+  // Project descriptions
+  const [shortMode, setShortMode] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const [editedDescription, setEditedDescription] = useState('');
+  const descriptionRefs = useRef({});
+  const textAreaRefs = useRef({});
 
   //-------JIRA
   useEffect(() => {
@@ -406,12 +413,114 @@ function App() {
     return `Projects - ${selectedStatuses.map(status => status.charAt(0).toUpperCase() + status.slice(1)).join(", ")}`;
   };
 
+  const toggleShortMode = () => {
+    setShortMode(prev => !prev); // Toggle between short and long mode
+  };
+
+
+  const enableEditing = (id) => {
+    const project = projects.find((p) => p.id === id);
+    if (project) {
+      setEditingId(id);
+      setEditedDescription(project.description || '');
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      const descriptionBox = descriptionRefs.current[editingId];
+      const textArea = textAreaRefs.current[editingId];
+
+      // If the click is outside the description or textarea, save the description
+      if (
+        editingId &&
+        descriptionBox &&
+        !descriptionBox.contains(e.target) &&
+        textArea &&
+        !textArea.contains(e.target)
+      ) {
+        saveDescription(editingId); // Save when clicked outside
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [editingId]);
+
+
+  const saveDescription = async (projectId) => {
+
+    // if (!editedDescription.trim()) {
+    //   console.error('Description is empty');
+    //   return; 
+    // }
+  
+    const updatedProject = projects.find(p => p.id === projectId);
+    
+    if (!updatedProject) {
+      console.error('Project not found');
+      return;
+    }
+  
+    const updatedProjectData = { 
+      ...updatedProject, 
+      description: editedDescription 
+    };
+  
+    try {
+      const response = await fetch(`${BASE_URL}/api/projects/${projectId}?useTuke=${localStorage.getItem('isTukeLogin')}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedProjectData) 
+      });
+  
+      if (!response.ok) {
+        throw new Error('Error saving description');
+      }
+  
+      setProjects(prevProjects =>
+        prevProjects.map(p =>
+          p.id === projectId ? updatedProjectData : p 
+        )
+      );
+  
+      setEditingId(null); 
+      await refreshProjects(); 
+  
+
+      setNewProjectId(projectId);
+      setHighlightActive(true);
+    } catch (error) {
+      setEditingId(null); 
+      console.error('Error saving description:', error);
+    }
+  };
+  
+
+  const truncateDescription = (description, maxLines) => {
+    if (description == null) {
+      return '';
+    }
+    const lines = description.split('\n');
+    if (lines.length <= maxLines) {
+      return description;
+    }
+    return `${lines.slice(0, maxLines).join('\n')}...`;
+  };
+
+/*  
   const truncateDescription = (description, maxLength) => {
     if (description.length <= maxLength) {
       return description;
     }
-    return description.slice(0, maxLength) + '...';
+    return description.slice(0, maxLength) + "...";
   };
+*/  
 
   return (
 
@@ -484,6 +593,33 @@ function App() {
                     </div>
                   </Card.Body>
                 </Card>
+                <Card className="mt-2">
+                  <Card.Body>
+                    <div className="filterWrapper">
+                      <h4>Descriptions</h4>
+                      <div className="ms-3">
+                        <div className="form-check form-switch mt-3 ms-1">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            role="switch"
+                            id="descriptionSwitch"
+                            checked={!shortMode}
+                            onChange={toggleShortMode}
+                            style={{ transform: "scale(1.4)" }} // Enlarge the switch
+                          />
+                        </div>
+                        <label
+                            className="form-check-label"
+                            htmlFor="descriptionSwitch"
+                            style={{ fontSize: "12px" }}
+                          >
+                            Show Full Descriptions
+                        </label>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
               </Col>
 
               {/* Main Content (Projects, Filter Input, and Table) */}
@@ -523,7 +659,7 @@ function App() {
                   </div>
                 ) : (
                   <div ref={projectListRef} className="project-table-container">
-                    <Table responsive striped bordered hover className="table w-100">
+                    <Table responsive bordered hover className="table w-100"> {/*striped */}
                       <thead>
                         <tr>
                           <th>Project</th>
@@ -540,6 +676,7 @@ function App() {
                             key={project.id}
                             id={`project-${project.id}`}
                             className={highlightActive && newProjectId === project.id ? 'table-info' : ''}
+                            style={{borderTop: "1px solid #ddd"}}
                           >
                             <td>
                               <a
@@ -551,11 +688,39 @@ function App() {
                               >
                                 {project.name}
                               </a>
-                              {project.description && (
-                                <span className="project-description">
-                                  {truncateDescription(project.description, 200)} {/* Limit to 100 characters */}
-                                </span>
-                              )}
+                              <div
+                                  ref={(el) => descriptionRefs.current[project.id] = el} 
+                                  onClick={() => enableEditing(project.id)} 
+                                >
+                                  {editingId === project.id ? (
+                                    <textarea
+                                      className="form-control auto-height"
+                                      value={editedDescription}
+                                      onChange={(e) => setEditedDescription(e.target.value)}
+                                      onBlur={() => saveDescription(project.id)}
+                                      onKeyDown={(e) => e.key === 'Enter' && saveDescription(project.id)}
+                                      ref={(el) => {
+                                        if (el) {
+                                          el.style.height = 'auto';
+                                          el.style.height = el.scrollHeight + 'px';
+                                        }
+                                      }}
+                                    />
+
+                                  ) : (
+                                    <OverlayTrigger
+                                      placement="top"
+                                      overlay={<Tooltip id="tooltip">Click to edit description</Tooltip>}
+                                    >
+                                      <div className="project-description-box">
+                                         <span
+                                          style={{ cursor: 'pointer' }}>
+                                          {shortMode ? truncateDescription(project.description, 4) : project.description}
+                                        </span>
+                                      </div>
+                                    </OverlayTrigger>
+                                  )}
+                                </div>
                             </td>
                             <td>
                               {jiraProjects?.filter(proj => proj.id === project.jiraProjectId).length > 0
