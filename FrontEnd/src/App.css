@@ -9,6 +9,14 @@
   border: 1px solid #ddd;
 }  */
 
+.project-table-container {
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+  margin-bottom: 20px;
+  height: 100%;
+}
+
 table tbody tr.table-info {
   border-top: 1px solid #a6c3ca !important;
 }
