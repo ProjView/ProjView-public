@@ -40,16 +40,15 @@ function App() {
   const [selectedStatuses, setSelectedStatuses] = useState(["new", "active"]); // Default selected statuses
   const [projectDetailsModalOpen, setProjectDetailsModalOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState(null);
-  const [jiraSourceCode, setjiraSourceCode] = useState("");
 
   const [loading, setLoading] = useState(true);
 
   //-------JIRA
   useEffect(() => {
     if (!isLoggedIn) return;
-    setjiraSourceCode(localStorage.getItem('isTukeLogin') ? setjiraSourceCode("tuke") : setjiraSourceCode("nxt"));
+    const sourceCode = localStorage.getItem('isTukeLogin') ? "tuke" : "nxt";
     if (localStorage.getItem('refreshTokenJira') ){
-      checkExpiration(jiraSourceCode).then(response => {
+      checkExpiration(sourceCode).then(response => {
         if (!response) return;
            setAccessTokenJira(response.access_token);
            localStorage.setItem('accessTokenJira', response.access_token);
@@ -58,7 +57,7 @@ function App() {
          })
          .catch();
     } else {
-        fetchJira(jiraSourceCode)
+        fetchJira(sourceCode)
            .then(response => {
              setAccessTokenJira(response.access_token);
              localStorage.setItem('accessTokenJira', response.access_token);
@@ -74,8 +73,9 @@ function App() {
 
   useEffect(() => {
     if(!isLoggedIn) return;
-    setjiraSourceCode(localStorage.getItem('isTukeLogin') ? setjiraSourceCode("tuke") : setjiraSourceCode("nxt"));
-    checkExpiration(jiraSourceCode)
+      // Determine the appropriate source code based on localStorage
+      const sourceCode = localStorage.getItem('isTukeLogin') ? "tuke" : "nxt";
+      checkExpiration(sourceCode)
        .then(response => {
          if (!response) return;
          setAccessTokenJira(response.access_token);
