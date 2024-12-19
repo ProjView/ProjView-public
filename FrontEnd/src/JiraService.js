@@ -36,7 +36,7 @@ const JiraService = () => {
       const code = urlParams.get("code");
 
       if (!code) {
-         const tL = ocalStorage.getItem('isTukeLogin');
+         const tL = localStorage.getItem('isTukeLogin');
          let authUrl = tL ? AUTHORIZATION_URL : AUTHORIZATION_URL_TUKE;
          console.log(authUrl);
          console.log(tL);
