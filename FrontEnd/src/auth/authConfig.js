@@ -29,4 +29,4 @@ export const BASE_URL = process.env.REACT_APP_BASE_URL; // Use environment varia
 
 export const AUTHORIZATION_URL = process.env.REACT_APP_AUTHORIZATION_URL;
 
-export const AUTHORIZATION_URL_TUKE = process.env.REACT_APP_AUTHORIZATION_URL_TUKE;
+export const AUTHORIZATION_URL_TUKE = "https://auth.atlassian.com/authorize?audience=api.atlassian.com&client_id=a6iqQviuL0itUgCxTh0wmQLeFdO1LzNu&scope=read%3Ajira-work%20manage%3Ajira-project%20manage%3Ajira-configuration%20read%3Ajira-user%20write%3Ajira-work%20manage%3Ajira-webhook%20manage%3Ajira-data-provider&redirect_uri=http%3A%2F%2Flocalhost%2Foauth-callback&state=${YOUR_USER_BOUND_VALUE}&response_type=code&prompt=consent";
