@@ -38,8 +38,6 @@ const JiraService = () => {
       if (!code) {
          const tL = localStorage.getItem('isTukeLogin');
          let authUrl = tL ? AUTHORIZATION_URL_TUKE : AUTHORIZATION_URL;
-         console.log(authUrl);
-         console.log(tL);
          authUrl = authUrl.split("scope=").at(0) + "scope=offline_access%20" + authUrl.split("scope=").at(1)
 
          window.location.href = authUrl;

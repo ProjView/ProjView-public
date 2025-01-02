@@ -54,7 +54,7 @@ function App() {
   useEffect(() => {
     if (!isLoggedIn) return;
     const sourceCode = localStorage.getItem('isTukeLogin') ? "tuke" : "nxt";
-    if (localStorage.getItem('refreshTokenJira') != null){
+    if (localStorage.getItem('refreshTokenJira')){
       checkExpiration(sourceCode).then(response => {
         if (!response) return;
            setAccessTokenJira(response.access_token);
@@ -66,6 +66,7 @@ function App() {
     } else {
         fetchJira(sourceCode)
            .then(response => {
+            console.log(response);
              setAccessTokenJira(response.access_token);
              localStorage.setItem('accessTokenJira', response.access_token);
              localStorage.setItem('refreshTokenJira', response.refresh_token);
