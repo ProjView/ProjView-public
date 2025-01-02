@@ -39,7 +39,7 @@ const Login = ({ onLogin }) => {
                   disabled={isLoading}
                 >
                   <FontAwesomeIcon icon={faSignInAlt} className="me-2" />
-                  {isLoading ? "Signing In..." : "Sign In with Microsoft with TUKE"}
+                  {isLoading ? "Signing In..." : "Sign In with Microsoft with NXT"}
                 </Button>
 
                 <Button
@@ -50,7 +50,7 @@ const Login = ({ onLogin }) => {
                   disabled={isLoading}
                 >
                   <FontAwesomeIcon icon={faSignInAlt} className="me-2" />
-                  {isLoading ? "Signing In..." : "Sign In with Microsoft with NXT"}
+                  {isLoading ? "Signing In..." : "Sign In with Microsoft with TUKE"}
                 </Button>
 
                 {isLoading && (

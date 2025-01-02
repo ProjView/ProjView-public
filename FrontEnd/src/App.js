@@ -54,7 +54,7 @@ function App() {
   useEffect(() => {
     if (!isLoggedIn) return;
     const sourceCode = localStorage.getItem('isTukeLogin') ? "tuke" : "nxt";
-    if (localStorage.getItem('refreshTokenJira') ){
+    if (localStorage.getItem('refreshTokenJira') != null){
       checkExpiration(sourceCode).then(response => {
         if (!response) return;
            setAccessTokenJira(response.access_token);
@@ -101,7 +101,7 @@ function App() {
 
          fetchJiraProjects().then(projects => {
            fetchJiraIssues().then(issues => {
-             console.log(addIssuesToProjects(filterIssues(issues), projects));
+            //  console.log(addIssuesToProjects(filterIssues(issues), projects));
              setJiraProjects(addIssuesToProjects(filterIssues(issues), projects));
            }).catch(e => {
              console.error(e);
@@ -222,7 +222,7 @@ function App() {
 
   // Function to refresh the access token
   const refreshAccessToken = async () => {
-    if(tukeLogin){
+    if(!tukeLogin){
       try {
         const accounts = msalInstance.getAllAccounts();
         if (accounts.length > 0) {

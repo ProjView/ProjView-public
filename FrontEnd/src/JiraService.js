@@ -45,7 +45,6 @@ const JiraService = () => {
          window.location.href = authUrl;
          return;
       }
-
       try {
          const resp = await fetch(`${BASE_URL}api/oauth-callback?code=${code}&source=${jiraSourceCode}`, {
             method: 'GET',

@@ -24,7 +24,7 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
          try {
             const response = await fetch(`${BASE_URL}/api/projects/${projectId}?useTuke=${localStorage.getItem('isTukeLogin')}`);
             const projectData = await response.json();
-            console.log("Fetched project data:", projectData);
+            // console.log("Fetched project data:", projectData);
             setProject(projectData);
             setSelectedJiraProject(projectData.jiraProjectId || "");
             setProjectName(projectData.name || ""); // Set initial project name
@@ -116,7 +116,7 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
             // Set the shared folders to include the ACE folder and its subfolders
             setSharedFolders([aceFolder]); // Store the ACE folder and its subfolders
          } else {
-            console.log("The /ACE/ folder does not exist in your drive.");
+            // console.log("The /ACE/ folder does not exist in your drive.");
          }
       } catch (error) {
          console.error("Error fetching ACE folder items:", error);
@@ -125,7 +125,7 @@ const ProjectDetails = ({projectId, onClose, accessToken, jiraProjects}) => {
 
    const updateProject = async (updatedData, closeModal) => {
       try {
-         console.log("Updating project with data:", updatedData);
+         // console.log("Updating project with data:", updatedData);
          const response = await fetch(`${BASE_URL}/api/projects/${projectId}?useTuke=${localStorage.getItem('isTukeLogin')}`, {
             method: 'PUT',
             headers: {
