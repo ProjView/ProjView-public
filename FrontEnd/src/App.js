@@ -153,7 +153,7 @@ function App() {
   const authenticateOneDrive = async (tukeLogin) => {
     localStorage.setItem('isTukeLogin', tukeLogin);
     setTukeLogin(tukeLogin);
-    if(tukeLogin) {
+    if(!tukeLogin) {
       try {
         const response = await msalInstance.loginPopup({
           scopes: ["Files.ReadWrite", "User.Read"], // Define the scopes you need
