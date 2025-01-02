@@ -222,7 +222,7 @@ function App() {
 
   // Function to refresh the access token
   const refreshAccessToken = async () => {
-    if(!tukeLogin){
+    if(localStorage.getItem('isTukeLogin') == false){
       try {
         const accounts = msalInstance.getAllAccounts();
         if (accounts.length > 0) {
