@@ -53,7 +53,7 @@ function App() {
   //-------JIRA
   useEffect(() => {
     if (!isLoggedIn) return;
-    const sourceCode = localStorage.getItem('isTukeLogin') ? "tuke" : "nxt";
+    const sourceCode = localStorage.getItem('isTukeLogin') === "true" ? "tuke" : "nxt";
     if (localStorage.getItem('refreshTokenJira')){
       checkExpiration(sourceCode).then(response => {
         if (!response) return;
@@ -82,7 +82,7 @@ function App() {
   useEffect(() => {
     if(!isLoggedIn) return;
       // Determine the appropriate source code based on localStorage
-      const sourceCode = localStorage.getItem('isTukeLogin') ? "tuke" : "nxt";
+      const sourceCode = localStorage.getItem('isTukeLogin') === "true" ? "tuke" : "nxt";
       checkExpiration(sourceCode)
        .then(response => {
          if (!response) return;
@@ -223,7 +223,7 @@ function App() {
 
   // Function to refresh the access token
   const refreshAccessToken = async () => {
-    if(localStorage.getItem('isTukeLogin') == false){
+    if(localStorage.getItem('isTukeLogin') === "false"){
       try {
         const accounts = msalInstance.getAllAccounts();
         if (accounts.length > 0) {
