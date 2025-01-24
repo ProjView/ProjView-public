@@ -21,7 +21,7 @@ const JiraService = () => {
 
             if (!resp.ok) {
                console.error('Error refreshing token:');
-               return fetchJira()
+               return fetchJira(jiraSourceCode);
             }
 
             return await resp.json();
@@ -44,7 +44,7 @@ const JiraService = () => {
          return;
       }
       try {
-         console.log(code);
+         console.log('uRL: ', `${BASE_URL}api/oauth-callback?code=${code}&source=${jiraSourceCode}`);
          const resp = await fetch(`${BASE_URL}api/oauth-callback?code=${code}&source=${jiraSourceCode}`, {
             method: 'GET',
             headers: {

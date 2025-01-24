@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import './App.css';
 import { Container, Row, Col, Card, Button, InputGroup, FormControl, Table, Spinner, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBriefcase, faCode, faTrash, faFileCirclePlus, faCheck, faXmark, faPen, faQuestionCircle, faPause, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faFileCirclePlus, faCheck, faXmark, faPen, faQuestionCircle, faPause, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ProjectDetails from "./components/ProjectDetails";
 import Header from './components/Header';
 import AddProjectModal from "./components/AddProjectModal";
@@ -56,6 +56,7 @@ function App() {
     const sourceCode = localStorage.getItem('isTukeLogin') === "true" ? "tuke" : "nxt";
     if (localStorage.getItem('refreshTokenJira')){
       checkExpiration(sourceCode).then(response => {
+        console.log('checkExpiration: ', response);
         if (!response) return;
            setAccessTokenJira(response.access_token);
            localStorage.setItem('accessTokenJira', response.access_token);
@@ -98,11 +99,15 @@ function App() {
     fetchCloudId()
        .then(cloudData => {
          localStorage.setItem('cloudId', cloudData.id);
+         console.log('cloudId', cloudData.id);
          setCloudId(cloudData.id);
 
          fetchJiraProjects().then(projects => {
+           console.log('projects: ', projects);
            fetchJiraIssues().then(issues => {
-            //  console.log(addIssuesToProjects(filterIssues(issues), projects));
+             console.log('issues: ', issues);
+             console.log('filteredIssues: ', filterIssues(issues));
+             console.log(addIssuesToProjects(filterIssues(issues), projects));
              setJiraProjects(addIssuesToProjects(filterIssues(issues), projects));
            }).catch(e => {
              console.error(e);
